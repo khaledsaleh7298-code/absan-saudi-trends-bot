@@ -394,7 +394,8 @@ def fetch_li(client, since):
     payload = {
         "targetUrls": [p["url"] for p in client["pages"]],
         "maxPosts": LI_MAX_POSTS_PER_PAGE,
-        "postedLimitDate": int(since.timestamp() * 1000),  # بس المنشورات بعد آخر فحص
+        # بس المنشورات بعد آخر فحص (لازم نص، مش رقم)
+        "postedLimitDate": since.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "includeQuotePosts": True,
         "includeReposts": LI_INCLUDE_REPOSTS,
         "scrapeReactions": False,   # التفاعلات بتنحسب كل وحدة كأنها منشور
@@ -482,6 +483,9 @@ def main():
         for c, platform, fetch in jobs:
             key = f"{c['name']}|{platform}"
             last_ok = parse_time(state["last_ok"].get(key))
+            # بإعادة المحاولة منعيد بس اللي فشل، مش اللي نجح من شوي
+            if last_ok and now - last_ok < timedelta(minutes=FETCH_EVERY_MINUTES - 5):
+                continue
             since = max(last_ok - timedelta(minutes=OVERLAP_MINUTES), oldest_allowed) \
                 if last_ok else oldest_allowed
             try:
@@ -519,16 +523,28 @@ def main():
         print(f"Sent {sent} alerts ({len(alerts)} new).")
 
         state.update({"seen": seen, "recent": recent})
-        if jobs and len(failed) == len(jobs):
-            state["fail_streak"] = state.get("fail_streak", 0) + 1
-            if state["fail_streak"] == 3:  # تنبيه وحيد حتى ما يضل البوت ساكت وهو معطّل
-                send_message("⚠️ <b>البوت ما قدر يجيب الأخبار من 3 محاولات متتالية.</b>\n"
-                             "افحصوا تبويب Actions على GitHub ورصيد Apify.")
-        else:
-            state["fail_streak"] = 0
+        # عدّاد فشل لكل مهمة لحالها، وتنبيه وحيد إذا فشلت 3 مرات ورا بعض
+        streaks = state.setdefault("fail_streaks", {})
+        state.pop("fail_streak", None)
+        for c, platform, _ in jobs:
+            key = f"{c['name']}|{platform}"
+            if key in failed:
+                streaks[key] = streaks.get(key, 0) + 1
+                if streaks[key] == 3:
+                    send_message(f"⚠️ <b>البوت ما قدر يجيب أخبار {PLATFORMS[platform]} "
+                                 f"لـ {html.escape(c['name'])} من 3 محاولات متتالية.</b>\n"
+                                 "افحصوا تبويب Actions على GitHub ورصيد Apify.")
+            elif state["last_ok"].get(key) == now.isoformat():
+                streaks.pop(key, None)
+        if len(failed) < len(jobs):
             state["last_fetch"] = now.isoformat()
-        state["next_fetch"] = (now + timedelta(
-            minutes=RETRY_AFTER_FAIL_MINUTES if failed else FETCH_EVERY_MINUTES)).isoformat()
+        # الفحص الجاي: أول مهمة بيصير دورها، أو بعد 20 دقيقة إذا في شي فشل
+        due = [parse_time(state["last_ok"][f"{c['name']}|{p}"]) + timedelta(minutes=FETCH_EVERY_MINUTES)
+               for c, p, _ in jobs if state["last_ok"].get(f"{c['name']}|{p}")]
+        if failed:
+            due.append(now + timedelta(minutes=RETRY_AFTER_FAIL_MINUTES))
+        state["next_fetch"] = (min(due) if due else now + timedelta(
+            minutes=RETRY_AFTER_FAIL_MINUTES)).isoformat()
 
         if announcement:
             telegram("setMyCommands", commands=[
