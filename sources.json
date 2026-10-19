@@ -1,0 +1,30 @@
+{
+  "clients": [
+    {
+      "name": "أحمد المنصور",
+      "emoji": "💧",
+      "x_accounts": [
+        "MEWA_KSA",
+        "swa_gov",
+        "nwc_media",
+        "sharakat_sa",
+        "SaudiWaterWeek",
+        "EasternEamana"
+      ]
+    },
+    {
+      "name": "فرحان العنزي",
+      "emoji": "👥",
+      "x_accounts": [
+        "hrsd_sa",
+        "aitrendnews",
+        "riyadhef1",
+        "senseifund",
+        "saudimoh",
+        "infographic_ksa",
+        "wathefah",
+        "almodifershow"
+      ]
+    }
+  ]
+}
