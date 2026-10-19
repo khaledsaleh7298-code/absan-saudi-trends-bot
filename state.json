@@ -70,10 +70,23 @@
     "x:2112251815244800048": "2026-10-19T19:40:58.605311+00:00",
     "x:2112251425371607344": "2026-10-19T19:40:58.605311+00:00",
     "x:2112250254972072282": "2026-10-19T19:40:58.605311+00:00",
-    "x:2112248362468798718": "2026-10-19T19:40:58.605311+00:00"
+    "x:2112248362468798718": "2026-10-19T19:40:58.605311+00:00",
+    "li:7518024347593244673": "2026-10-19T20:14:11.229591+00:00",
+    "li:7518021211927474176": "2026-10-19T20:14:11.229591+00:00",
+    "li:7518022401616510977": "2026-10-19T20:14:11.229591+00:00",
+    "li:7518034775052472321": "2026-10-19T20:14:11.229591+00:00"
   },
   "recent": {
     "أحمد المنصور": [
+      {
+        "key": "li:7518024347593244673",
+        "platform": "li",
+        "label": "sharakat",
+        "author_name": "شراكات SHARAKAT",
+        "text": "Congratulations to Taif Independent Water Plant Company on the Taif ISTP winning the Sustainability and Innovation Award at the #Sharakat_Awards_2026. We commend the project team on this outstanding achievement.",
+        "created_at": "2026-10-19T19:04:42.604000+00:00",
+        "url": "https://www.linkedin.com/posts/sharakat_sharakatabrawardsabr2026-activity-7518024347593244673-jSUa"
+      },
       {
         "key": "x:2112258397579956713",
         "platform": "x",
@@ -91,6 +104,24 @@
         "text": "نهنّئ شركة الشقيق الثالثة للمياه بفوز مشروع الشقيق 3 لتحلية المياه بجائزة الأثر الاجتماعي والمجتمعي، ضمن #جائزة_شراكات_2026، مع تمنياتنا لها بمزيد من العطاء والإنجاز. https://t.co/qzIQpP9dgc",
         "created_at": "2026-10-19T19:01:33+00:00",
         "url": "https://x.com/sharakat_sa/status/2112257863133634764"
+      },
+      {
+        "key": "li:7518022401616510977",
+        "platform": "li",
+        "label": "sharakat",
+        "author_name": "شراكات SHARAKAT",
+        "text": "Congratulations to Shuqaiq 3 Water Company on the Shuqaiq 3 IWP winning the Social and Community Impact Award at the #Sharakat_Awards_2026. We wish the company continued contributions and achievements.",
+        "created_at": "2026-10-19T18:56:58.647000+00:00",
+        "url": "https://www.linkedin.com/posts/sharakat_sharakatabrawardsabr2026-activity-7518022401616510977-ziZf"
+      },
+      {
+        "key": "li:7518021211927474176",
+        "platform": "li",
+        "label": "sharakat",
+        "author_name": "شراكات SHARAKAT",
+        "text": "Congratulations to Al Aqqad Water Treatment Company on the Tabuk 2 ISTP winning the Operational Excellence Award – Private Sector Water Treatment Projects at the #Sharakat_Awards_2026. We wish the company continued excellence and success.",
+        "created_at": "2026-10-19T18:52:15.003000+00:00",
+        "url": "https://www.linkedin.com/posts/sharakat_sharakatabrawardsabr2026-activity-7518021211927474176-9F7U"
       },
       {
         "key": "x:2112255167261274586",
@@ -118,36 +149,18 @@
         "text": "نبارك لشركة رابغ الثالثة فوز مشروع رابغ 3 بجائزة التميز التشغيلي – مشاريع تحلية المياه للقطاع الخاص، ضمن #جائزة_شراكات_2026، مع تمنياتنا لها بمزيد من النجاح. https://t.co/SkByKm2K3i",
         "created_at": "2026-10-19T18:47:39+00:00",
         "url": "https://x.com/sharakat_sa/status/2112254367453823273"
-      },
-      {
-        "key": "x:2112253669492375659",
-        "platform": "x",
-        "label": "sharakat_sa",
-        "author_name": "شراكات SHARAKAT",
-        "text": "نهنّئ شركة الرتل المستقلة لتنقية المياه بفوز مشروع المدينة 3 بجائزة التميز في تنفيذ المشاريع – مشاريع معالجة المياه للقطاع الخاص، ضمن #جائزة_شراكات_2026، ونبارك لفريق عملها هذا الإنجاز. https://t.co/CFM6oi27pd",
-        "created_at": "2026-10-19T18:44:53+00:00",
-        "url": "https://x.com/sharakat_sa/status/2112253669492375659"
-      },
-      {
-        "key": "x:2112251815244800048",
-        "platform": "x",
-        "label": "sharakat_sa",
-        "author_name": "شراكات SHARAKAT",
-        "text": "نبارك للشعيبة الثالثة لتحلية المياه فوز مشروع تحويل الشعيبة 3 بجائزة التميز في تنفيذ المشاريع – مشاريع تحلية المياه للقطاع الخاص، ضمن #جائزة_شراكات_2026، متمنّين لها مواصلة التميّز والإنجاز. https://t.co/8vvCFgbk4y",
-        "created_at": "2026-10-19T18:37:31+00:00",
-        "url": "https://x.com/sharakat_sa/status/2112251815244800048"
-      },
-      {
-        "key": "x:2112251425371607344",
-        "platform": "x",
-        "label": "sharakat_sa",
-        "author_name": "شراكات SHARAKAT",
-        "text": "نهنّئ شركة ستريم لنقل المياه بفوز مشروع الجبيل – بريدة لنقل المياه بجائزة التميز في الإغلاق المالي – أفضل نموذج تمويلي، ضمن #جائزة_شراكات_2026، ونتطلّع إلى مزيد من إنجازاتها. https://t.co/vhNDzVy1eH",
-        "created_at": "2026-10-19T18:35:58+00:00",
-        "url": "https://x.com/sharakat_sa/status/2112251425371607344"
       }
     ],
     "فرحان العنزي": [
+      {
+        "key": "li:7518034775052472321",
+        "platform": "li",
+        "label": "mimgov",
+        "author_name": "Ministry of Industry and Mineral Resources",
+        "text": "\"بناءُ المصانع؛ يتطلّب بناء الإنسان\".\n\nسمو وزير الطاقة، وزير الصناعة والثروة المعدنية، رئيس مجلس إدارة الهيئة الملكية للجبيل وينبع.",
+        "created_at": "2026-10-19T19:46:08.704000+00:00",
+        "url": "https://www.linkedin.com/posts/mimgov_%D8%A8%D9%86%D8%A7%D8%A1-%D8%A7%D9%84%D9%85%D8%B5%D8%A7%D9%86%D8%B9-%D9%8A%D8%AA%D8%B7%D9%84%D8%A8-%D8%A8%D9%86%D8%A7%D8%A1-%D8%A7%D9%84%D8%A5%D9%86%D8%B3%D8%A7%D9%86-%D8%B3%D9%85%D9%88-activity-7518034775052472321-OdP5"
+      },
       {
         "key": "li:7517976303757811712",
         "platform": "li",
@@ -210,20 +223,11 @@
         "text": "نفسي تراودني بنشر غسيل كم شركة \nلديها فضائح في الافصاحات \n\nاباء يجاملون ابنائهم على حساب مصلحة مساهمين الشركة\n\nمؤسسين يمولون شركاتهم الاخرى بسيولة الشركة المدرجة\n\nمشاريع تجارية مع اطراف خارجية توقع عقود بالباطن مع شركات لأعضاء مجالس الادارة\n\nلكن انذكر ان ماراح تغير شيء وانت المتضرر الوحيد وأهون",
         "created_at": "2026-10-19T13:29:58+00:00",
         "url": "https://x.com/senseifund/status/2112174418470244421"
-      },
-      {
-        "key": "x:2112173168060461278",
-        "platform": "x",
-        "label": "almodifershow",
-        "author_name": "في الصورة",
-        "text": "هل من يسيطر على جزيرة \"ذوباب\" يستطيع أن يسيطر على \"ميون\" تلقائياً؟\n\n#حرب_الحوثي_في_الصوره\n@YasserSAN168074\n\nشاهد الحلقة الكاملة\nhttps://t.co/vMXRLiyoeI https://t.co/ZZYE1qVXUa",
-        "created_at": "2026-10-19T13:25:00+00:00",
-        "url": "https://x.com/almodifershow/status/2112173168060461278"
       }
     ]
   },
-  "last_fetch": "2026-10-19T19:40:58.605311+00:00",
-  "next_fetch": "2026-10-19T20:06:10.749195+00:00",
+  "last_fetch": "2026-10-19T20:14:11.229591+00:00",
+  "next_fetch": "2026-10-19T20:40:58.605311+00:00",
   "baselined": [
     "أحمد المنصور|x",
     "فرحان العنزي|x",
@@ -233,8 +237,8 @@
   "last_ok": {
     "أحمد المنصور|x": "2026-10-19T19:40:58.605311+00:00",
     "فرحان العنزي|x": "2026-10-19T19:40:58.605311+00:00",
-    "أحمد المنصور|li": "2026-10-19T19:06:10.749195+00:00",
-    "فرحان العنزي|li": "2026-10-19T19:06:10.749195+00:00"
+    "أحمد المنصور|li": "2026-10-19T20:14:11.229591+00:00",
+    "فرحان العنزي|li": "2026-10-19T20:14:11.229591+00:00"
   },
   "fail_streaks": {}
 }
