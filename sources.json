@@ -10,6 +10,13 @@
         "sharakat_sa",
         "SaudiWaterWeek",
         "EasternEamana"
+      ],
+      "linkedin_pages": [
+        "https://www.linkedin.com/company/awptco/",
+        "https://www.linkedin.com/company/أسبوع-المياه-السعودي-saudi-water-week/",
+        "https://www.linkedin.com/company/mewa-ksa/",
+        "https://www.linkedin.com/company/-nwc/",
+        "https://www.linkedin.com/company/water-electricity-co/"
       ]
     },
     {
@@ -19,11 +26,14 @@
         "hrsd_sa",
         "aitrendnews",
         "riyadhef1",
-        "senseifund",
         "saudimoh",
         "infographic_ksa",
-        "wathefah",
-        "almodifershow"
+        "wathefah"
+      ],
+      "linkedin_pages": [
+        "https://www.linkedin.com/company/mimgov/",
+        "https://www.linkedin.com/company/ministry-of-human-resources-and-social-development-ksa/",
+        "https://www.linkedin.com/company/infographics-insights/"
       ]
     }
   ]
