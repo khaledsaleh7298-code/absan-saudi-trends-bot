@@ -114,7 +114,8 @@
     "x:2112461558848635315": "2026-10-20T08:41:27.966659+00:00",
     "x:2112461431132012768": "2026-10-20T08:41:27.966659+00:00",
     "x:2112455019668877429": "2026-10-20T08:41:27.966659+00:00",
-    "x:2112450635882758425": "2026-10-20T08:41:27.966659+00:00"
+    "x:2112450635882758425": "2026-10-20T08:41:27.966659+00:00",
+    "li:7518249777529032705": "2026-10-20T10:23:42.808182+00:00"
   },
   "recent": {
     "أحمد المنصور": [
@@ -193,6 +194,15 @@
     ],
     "فرحان العنزي": [
       {
+        "key": "li:7518249777529032705",
+        "platform": "li",
+        "label": "infographics-insights",
+        "author_name": "Useful Infographics",
+        "text": "Anthropic uses AI Agents to automate their own work. \n\nThe 5 tools they built internally are now yours…\n\n\nGreat post by: Rakesh Gohel \n\n\nOriginal post below\n\n\n⬇️⬇️⬇️\n\n\nAnthropic uses AI Agents to automate their own work. \n\nThe 5 tools they built internally are now yours…\n\nAs Anthropic's ecosystem grows, they're releasing the same tools that they use internally to automate work. \n\nMost people only ever use one. Here's what all five actually do.\n\n1\\ Claude Chat\n\n- What it is: A conversational AI assistant for everyday thinking, writing & analysis\n- Where to use: Draft emails, essays & reports, brainstorm ideas, research and explain complex topics\n- Pros: Zero setup, versatile, works instantly\n- Cons: Provides recommendation\n- Best for: Anyone who needs a smart thinking partner on demand\n\n2\\ Claude Code\n\n- What it is: A command-line tool that runs Claude as an autonomous coding agent in your terminal\n- Where to use: Build software, debug features, refactor codebases at scale, write and run tests, fixing failures automatically\n- Pros: Fully autonomous, deep codebase context\n- Cons: Needs careful review, usage costs apply\n- Best for: Developers who want AI to handle real engineering work end-to-end\n\n3\\ Claude Projects\n\n- What it is: A persistent workspace where Claude retains your context, docs, and instructions across every conversation\n- Where to use: Client work requiring consistent tone, research with reference docs, Team knowledge bases\n- Pros: No re-explaining, context carries forward, reusable\n- Cons: Requires upfront setup, works best with clear instructions\n- Best for: Anyone doing ongoing, context-heavy work where starting fresh each time costs time\n\n4\\ Claude Skills\n\n- What it is: Custom instruction sets that teach Claude to do one specific task the same way, every time\n- Where to use: Brand-standard document creation, repeatable report formats, Team workflows that need consistency\n- Pros: Reliable outputs, shareable across teams, no prompt re-writing\n- Cons: Needs thoughtful setup, less flexible for one-off tasks\n- Best for: Teams that need Claude to produce consistent, high-quality work at scale\n\n5\\ Claude Cowork\n\n- What it is: A desktop app for non-developers that automates file management and repetitive tasks across your computer\n- Where to use: Organize, rename & sort files in bulk, extract data from PDFs and fill spreadsheets, automate copy-paste workflows across apps\n- Pros: No coding needed, works across applications\n- Cons: Early stage, less configuration control\n- Simply put: Claude Code × Claude Chat = Cowork, built for everyone without the technical overhead.\n\n📌 Quick decision guide:\n\n1. Need to think, write, or research? → Claude Chat \n2. Need to build or fix code autonomously? → Claude Code \n3. Need persistent context for ongoing work? → Projects\n4. Need consistent, repeatable outputs? → Skills \n5. Need to automate files and tasks without coding? → Cowork\n\n______________\n\nFollow for more Useful Infographics",
+        "created_at": "2026-10-20T10:00:29.289000+00:00",
+        "url": "https://www.linkedin.com/posts/infographics-insights_anthropic-uses-ai-agents-to-automate-their-activity-7518249777529032705-20Dg"
+      },
+      {
         "key": "x:2112438680182800745",
         "platform": "x",
         "label": "wathefah",
@@ -254,20 +264,11 @@
         "text": "رواية حية |\nناصر وعبدالعزيز.. أخوان جمعتهما صلة الدم، وامتد عطاؤهما بالتبرع به لسنوات، حتى تُوِّجا بوسام الاستحقاق. https://t.co/AVMKmSaGos",
         "created_at": "2026-10-19T15:20:20+00:00",
         "url": "https://x.com/saudimoh/status/2112202192413233240"
-      },
-      {
-        "key": "x:2112197268694544888",
-        "platform": "x",
-        "label": "wathefah",
-        "author_name": "منيرة AI",
-        "text": "بعد تجربة روتينات كثيرة، هذي 6 أشياء فعلياً غيّرت شكل لحيتي وشعري: https://t.co/8QxkFro8LW",
-        "created_at": "2026-10-19T15:00:46+00:00",
-        "url": "https://x.com/wathefah/status/2112197268694544888"
       }
     ]
   },
-  "last_fetch": "2026-10-20T09:54:23.392051+00:00",
-  "next_fetch": "2026-10-20T10:16:41.739765+00:00",
+  "last_fetch": "2026-10-20T10:23:42.808182+00:00",
+  "next_fetch": "2026-10-20T10:54:23.392051+00:00",
   "baselined": [
     "أحمد المنصور|x",
     "فرحان العنزي|x",
@@ -277,8 +278,8 @@
   "last_ok": {
     "أحمد المنصور|x": "2026-10-20T09:54:23.392051+00:00",
     "فرحان العنزي|x": "2026-10-20T09:54:23.392051+00:00",
-    "أحمد المنصور|li": "2026-10-20T09:16:41.739765+00:00",
-    "فرحان العنزي|li": "2026-10-20T09:16:41.739765+00:00"
+    "أحمد المنصور|li": "2026-10-20T10:23:42.808182+00:00",
+    "فرحان العنزي|li": "2026-10-20T10:23:42.808182+00:00"
   },
   "fail_streaks": {}
 }
