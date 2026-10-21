@@ -1,8 +1,9 @@
 """
 Absan Client Sources Bot
 ------------------------
-يراقب حسابات X وصفحات لينكدإن اللي حددها كل عميل (ملف sources.json)،
-ويبعت كل منشور جديد لجروب تيليغرام أول ما ينزل، مع اسم العميل والرابط.
+يراقب حسابات X وصفحات لينكدإن اللي حددها كل عميل، ومواقع الأخبار (RSS)
+(ملف sources.json)، ويبعت كل خبر جديد بيخص العميل لجروب تيليغرام أول ما ينزل،
+مع اسم العميل والرابط.
 
 الأوامر داخل الجروب:
   /latest  آخر الأخبار المحفوظة لكل عميل
@@ -11,6 +12,7 @@ Absan Client Sources Bot
 يشتغل على GitHub Actions. الأسرار تُقرأ من Secrets ولا تُكتب في الكود أبداً.
 """
 
+import hashlib
 import html
 import json
 import os
@@ -22,6 +24,7 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
+from xml.etree import ElementTree
 from zoneinfo import ZoneInfo
 
 # ======================= الإعدادات (يمكن تعديلها) =======================
@@ -52,6 +55,12 @@ LI_MAX_POSTS_PER_PAGE = 10        # أقصى عدد منشورات لكل صفح
 LI_MAX_CHARGE_USD = 0.05          # سقف أمان لتكلفة كل طلب (= 25 منشور تقريباً)
 LI_INCLUDE_REPOSTS = False        # إعادة النشر بدون تعليق ما بتهمنا
 
+# --- مواقع الأخبار (RSS) ---
+# مجانية (بدون Apify)، فبنفحصها كل ما يصحى البوت تقريباً.
+# بتنشر كل شي، فما بينبعت منها إلا الخبر اللي فيه كلمة من news_keywords للعميل.
+RSS_FETCH_EVERY_MINUTES = 10      # كل قديش نفحص مواقع الأخبار
+RSS_USER_AGENT = "Mozilla/5.0 (compatible; AbsanNewsBot/1.0)"
+
 STATE_FILE = "state.json"
 SOURCES_FILE = "sources.json"
 STATE_VERSION = 3                 # النسخة 3 = X + لينكدإن
@@ -63,8 +72,9 @@ CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
 APIFY_TOKEN = os.environ.get("APIFY_TOKEN", "").strip()
 
 HANDLE_RE = re.compile(r"^[A-Za-z0-9_]{1,15}$")
-PLATFORMS = {"x": "X", "li": "لينكدإن"}
-FETCH_EVERY = {"x": X_FETCH_EVERY_MINUTES, "li": LI_FETCH_EVERY_MINUTES}
+PLATFORMS = {"x": "X", "li": "لينكدإن", "rss": "مواقع الأخبار"}
+FETCH_EVERY = {"x": X_FETCH_EVERY_MINUTES, "li": LI_FETCH_EVERY_MINUTES,
+               "rss": RSS_FETCH_EVERY_MINUTES}
 X_JOB = "all|x"                   # مهمة X وحدة لكل العملاء
 
 
@@ -119,7 +129,7 @@ def every_text(minutes):
         return "ساعتين"
     if minutes % 60 == 0:
         return f"{minutes // 60} ساعات"
-    return f"{minutes} دقيقة"
+    return f"{minutes} دقائق" if minutes <= 10 else f"{minutes} دقيقة"
 
 
 def load_json(path, default):
@@ -196,6 +206,11 @@ def passes_filter(item, client):
     text = normalize(item["text"])
     if any(p.search(text) for p in client["blocked"]):
         return False, "كلمة ممنوعة"
+    if item["platform"] == "rss":
+        # مواقع الأخبار بتنشر كل شي: لازم كلمة من قائمة الأخبار الخاصة بالعميل
+        if not any(p.search(text) for p in client["news_keywords"]):
+            return False, "برا مجال العميل"
+        return True, ""
     if (item["label"] or "").lower() in client["trusted"]:
         return True, ""
     if client["keywords"] and not any(p.search(text) for p in client["keywords"]):
@@ -234,15 +249,26 @@ def load_sources():
                                      + urllib.parse.quote(slug) + "/", "slug": slug})
             else:
                 print(f"تجاهلت صفحة لينكدإن غير صالحة عند {name}: {u!r}")
-        if name and (handles or pages):
+        news_keywords = compile_words(c.get("news_keywords"))
+        if name and (handles or pages or news_keywords):
             clients.append({"name": name, "emoji": c.get("emoji") or "📰",
                             "handles": handles, "pages": pages,
                             "keywords": compile_words(c.get("keywords")),
+                            "news_keywords": news_keywords,
                             "trusted": {source_id(s) for s in c.get("trusted_accounts") or []},
                             "blocked": blocked})
     if not clients:
         sys.exit(f"ملف {SOURCES_FILE} ما فيه ولا عميل عنده مصادر صالحة.")
-    return clients
+
+    feeds = []
+    for f in data.get("news_feeds") or []:
+        fname = str((f or {}).get("name") or "").strip()
+        furl = str((f or {}).get("url") or "").strip()
+        if fname and furl.startswith("http"):
+            feeds.append({"name": fname, "url": furl})
+        else:
+            print(f"تجاهلت موقع أخبار غير صالح: {f!r}")
+    return clients, feeds
 
 
 # ----------------------------- تيليغرام -----------------------------
@@ -295,6 +321,9 @@ def format_alert(item, client):
     if item["platform"] == "x":
         where = f"🏛 <b>{source}</b> (@{html.escape(item['label'])})"
         link_text = "فتح التغريدة على X"
+    elif item["platform"] == "rss":
+        where = f"📰 <b>{source}</b>"
+        link_text = f"فتح الخبر على {source}"
     else:
         where = f"🏛 <b>{source}</b> · لينكدإن"
         link_text = "فتح المنشور على لينكدإن"
@@ -314,6 +343,8 @@ def format_alert(item, client):
 def short_label(item):
     if item["platform"] == "x":
         return "@" + item["label"]
+    if item["platform"] == "rss":
+        return "📰 " + item["label"]
     return "in · " + shorten(item["author_name"] or item["label"], 25)
 
 
@@ -339,11 +370,16 @@ def format_latest(state, clients):
     return "\n".join(blocks)
 
 
-def format_sources(clients):
+def format_sources(clients, feeds):
     lines = ["📡 <b>المصادر اللي البوت بيراقبها</b>",
              f"يفحص X كل {every_text(X_FETCH_EVERY_MINUTES)}، "
-             f"ولينكدإن كل {every_text(LI_FETCH_EVERY_MINUTES)} تقريباً.",
+             f"ولينكدإن كل {every_text(LI_FETCH_EVERY_MINUTES)}، "
+             f"ومواقع الأخبار كل {every_text(RSS_FETCH_EVERY_MINUTES)} تقريباً.",
              "🔎 وبيبعت بس الأخبار اللي بتخص مجال كل عميل."]
+    if feeds:
+        lines.append("\n📰 <b>مواقع الأخبار</b> (لكل العملاء، حسب كلمات كل عميل)")
+        for f in feeds:
+            lines.append(f"• {html.escape(f['name'])}")
     for c in clients:
         lines.append(f"\n{c['emoji']} <b>{html.escape(c['name'])}</b>")
         if c["handles"]:
@@ -358,7 +394,7 @@ def format_sources(clients):
     return "\n".join(lines)
 
 
-def handle_commands(state, clients, reply_enabled):
+def handle_commands(state, clients, feeds, reply_enabled):
     """يقرأ الرسائل الجديدة ويرد على الأوامر داخل الجروب فقط"""
     res = telegram("getUpdates", offset=state.get("update_offset", 0), timeout=0,
                    allowed_updates=["message"])
@@ -376,7 +412,7 @@ def handle_commands(state, clients, reply_enabled):
         if command in ("/latest", "/trends", "/start"):
             send_message(format_latest(state, clients), reply_to=msg.get("message_id"))
         elif command == "/sources":
-            send_message(format_sources(clients), reply_to=msg.get("message_id"))
+            send_message(format_sources(clients, feeds), reply_to=msg.get("message_id"))
 
 
 # ----------------------------- Apify -----------------------------
@@ -504,21 +540,86 @@ def fetch_li(clients, since):
     return list(found.values())
 
 
-def jobs_for(clients):
+# --- مواقع الأخبار (RSS) ---
+def strip_html(text):
+    text = re.sub(r"<[^>]+>", " ", text or "")
+    return re.sub(r"[ \t\r\f\v]+", " ", html.unescape(text)).strip()
+
+
+def rss_items_from_xml(raw):
+    """يقرأ عناصر الخبر من ملف RSS. إذا الملف مقطوع أو فيه غلط،
+    بيقرأ الأخبار الكاملة اللي فيه وبيتجاهل الناقص بدل ما يفشل كله"""
+    try:
+        return ElementTree.fromstring(raw).iter("item")
+    except ElementTree.ParseError:
+        items = []
+        for block in re.findall(rb"<item\b.*?</item>", raw, flags=re.S):
+            try:
+                items.append(ElementTree.fromstring(block))
+            except ElementTree.ParseError:
+                continue
+        return items
+
+
+def fetch_rss(feed):
+    req = urllib.request.Request(feed["url"], headers={"User-Agent": RSS_USER_AGENT})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            raw = resp.read()
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"HTTP {e.code} من {feed['url']}")
+    except Exception as e:
+        raise RuntimeError(f"ما قدرت أوصل {feed['url']}: {type(e).__name__}")
+    found = {}
+    for el in rss_items_from_xml(raw):
+        title = strip_html(el.findtext("title"))
+        link = (el.findtext("link") or "").strip()
+        created = parse_any_time((el.findtext("pubDate") or "").strip())
+        if not title or not link.startswith("http") or not created:
+            continue
+        uid = (el.findtext("guid") or "").strip() or link
+        desc = strip_html(el.findtext("description"))
+        text = title if not desc or desc.startswith(title) else f"{title}\n\n{desc}"
+        key = "rss:" + hashlib.sha1(uid.encode("utf-8")).hexdigest()[:16]
+        found[key] = {
+            "key": key,
+            "platform": "rss",
+            "label": feed["name"],
+            "author_name": feed["name"],
+            "text": text,
+            "created_at": created.astimezone(timezone.utc).isoformat(),
+            "url": link,
+        }
+    return list(found.values())
+
+
+def jobs_for(clients, feeds):
     """كل "مهمة" إلها وقت آخر فحص خاص فيها:
-    X مهمة وحدة لكل العملاء (طلب واحد)، ولينكدإن مهمة لكل عميل"""
+    X مهمة وحدة لكل العملاء (طلب واحد)، ولينكدإن مهمة لكل عميل،
+    وكل موقع أخبار مهمة لحاله بتتوزع أخباره على العملاء حسب كلماتهم"""
     x_clients = [c for c in clients if c["handles"]]
     if x_clients:
         yield X_JOB, "x", x_clients, fetch_x
     for c in clients:
         if c["pages"]:
             yield f"{c['name']}|li", "li", [c], fetch_li
+    news_clients = [c for c in clients if c["news_keywords"]]
+    if news_clients:
+        for f in feeds:
+            yield f"rss|{f['name']}", "rss", news_clients, (lambda _c, _s, f=f: fetch_rss(f))
 
 
 def job_title(key, platform):
     """اسم المهمة برسالة الفشل"""
+    if platform == "rss":
+        return f"موقع {key.split('|', 1)[1]}"
     who = "كل العملاء" if key == X_JOB else key.split("|")[0]
     return f"{PLATFORMS[platform]} لـ {who}"
+
+
+def baseline_key(client, key, platform):
+    """مفتاح «أول فحص بصمت» لكل عميل بكل مصدر"""
+    return f"{client['name']}|{key}" if platform == "rss" else f"{client['name']}|{platform}"
 
 
 # ----------------------------- التشغيل -----------------------------
@@ -572,7 +673,7 @@ def main():
     if missing:
         sys.exit("Missing secrets: " + ", ".join(missing))
 
-    clients = load_sources()
+    clients, feeds = load_sources()
     old_version = load_json(STATE_FILE, {}).get("version")
     state, announcement = migrate(load_json(STATE_FILE, {}))
     state.setdefault("baselined", [])
@@ -597,12 +698,17 @@ def main():
         recent = state.get("recent", {})
         oldest_allowed = now - timedelta(hours=MAX_AGE_HOURS)
 
-        jobs = list(jobs_for(clients))
+        jobs = list(jobs_for(clients, feeds))
+        retry_at = state.setdefault("retry_at", {})
         failed, alerts = [], []
         for key, platform, job_clients, fetch in jobs:
             last_ok = parse_time(state["last_ok"].get(key))
             # كل منصة إلها وتيرة، وبإعادة المحاولة منعيد بس اللي فشل
             if last_ok and now - last_ok < timedelta(minutes=FETCH_EVERY[platform] - 5):
+                continue
+            # اللي فشل بيستنى 20 دقيقة قبل ما نعيده (حتى ما يصرف رصيد على الفاضي)
+            wait_until = parse_time(retry_at.get(key))
+            if wait_until and now < wait_until:
                 continue
             since = max(last_ok - timedelta(minutes=OVERLAP_MINUTES), oldest_allowed) \
                 if last_ok else oldest_allowed
@@ -611,7 +717,9 @@ def main():
             except Exception as e:
                 print(f"{job_title(key, platform)} failed: {e}")
                 failed.append(key)
+                retry_at[key] = (now + timedelta(minutes=RETRY_AFTER_FAIL_MINUTES)).isoformat()
                 continue
+            retry_at.pop(key, None)
             new_keys = set()
             for c in job_clients:
                 # نوزّع النتائج على أصحابها: تغريدات X حسب الحساب
@@ -620,20 +728,22 @@ def main():
                         if platform != "x" or t["label"].lower() in mine_handles]
                 fresh = [t for t in mine if t["key"] not in seen
                          and parse_time(t["created_at"]) >= oldest_allowed]
-                bkey = f"{c['name']}|{platform}"
+                bkey = baseline_key(c, key, platform)
                 first_time = bkey not in state["baselined"]
                 passed = []
                 for t in fresh:
                     new_keys.add(t["key"])
                     ok, why = passes_filter(t, c)
                     if not ok:
-                        print(f"  filtered ({why}): {short_label(t)}: "
-                              f"{shorten(t['text'].replace(chr(10), ' '), 60)}")
+                        if platform != "rss":  # مواقع الأخبار معظمها بينفلتر، فما منطوّل السجل فيها
+                            print(f"  filtered ({why}): {short_label(t)}: "
+                                  f"{shorten(t['text'].replace(chr(10), ' '), 60)}")
                         continue
                     passed.append(t)
                     if not first_time:
                         alerts.append((t, c))
-                print(f"{c['name']} / {PLATFORMS[platform]}: {len(mine)} items, {len(fresh)} new, "
+                where = job_title(key, platform) if platform == "rss" else PLATFORMS[platform]
+                print(f"{c['name']} / {where}: {len(mine)} items, {len(fresh)} new, "
                       f"{len(fresh) - len(passed)} filtered"
                       + (" (first check: saved silently)" if first_time else "") + ".")
                 if first_time:
@@ -648,7 +758,7 @@ def main():
         if announcement:
             send_message(announcement + "• /latest آخر الأخبار المحفوظة لكل عميل\n"
                                         "• /sources المصادر اللي براقبها\n\n"
-                         + format_sources(clients))
+                         + format_sources(clients, feeds))
         alerts.sort(key=lambda a: a[0]["created_at"])
         sent = 0
         for t, c in alerts[-MAX_ALERTS_PER_RUN:]:
@@ -665,19 +775,28 @@ def main():
             if key in failed:
                 streaks[key] = streaks.get(key, 0) + 1
                 if streaks[key] == 3:
+                    hint = ("ممكن الموقع غيّر رابط الأخبار أو حجب البوت."
+                            if platform == "rss" else "افحصوا رصيد Apify كمان.")
                     send_message(f"⚠️ <b>البوت ما قدر يجيب أخبار "
                                  f"{html.escape(job_title(key, platform))} "
                                  f"من 3 محاولات متتالية.</b>\n"
-                                 "افحصوا تبويب Actions على GitHub ورصيد Apify.")
+                                 f"افحصوا تبويب Actions على GitHub. {hint}")
             elif state["last_ok"].get(key) == now.isoformat():
                 streaks.pop(key, None)
         if len(failed) < len(jobs):
             state["last_fetch"] = now.isoformat()
-        # الفحص الجاي: أول مهمة بيصير دورها، أو بعد 20 دقيقة إذا في شي فشل
-        due = [parse_time(state["last_ok"][key]) + timedelta(minutes=FETCH_EVERY[platform])
-               for key, platform, _, _ in jobs if state["last_ok"].get(key)]
-        if failed:
-            due.append(now + timedelta(minutes=RETRY_AFTER_FAIL_MINUTES))
+        # الفحص الجاي: أول مهمة بيصير دورها (واللي فشل: بعد 20 دقيقة من فشله)
+        live = {key for key, _, _, _ in jobs}
+        for k in list(retry_at):
+            if k not in live:
+                retry_at.pop(k)  # مصدر انشال من القائمة
+        due = []
+        for key, platform, _, _ in jobs:
+            if retry_at.get(key):
+                due.append(parse_time(retry_at[key]))
+            elif state["last_ok"].get(key):
+                due.append(parse_time(state["last_ok"][key])
+                           + timedelta(minutes=FETCH_EVERY[platform]))
         state["next_fetch"] = (min(due) if due else now + timedelta(
             minutes=RETRY_AFTER_FAIL_MINUTES)).isoformat()
 
@@ -688,7 +807,7 @@ def main():
             ])
 
     # بذاكرة جديدة كلياً منتجاهل الأوامر القديمة
-    handle_commands(state, clients, reply_enabled=not fresh_start)
+    handle_commands(state, clients, feeds, reply_enabled=not fresh_start)
     save_state(state)
 
 
