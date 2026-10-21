@@ -49,6 +49,7 @@ TRENDS_MAX_CHARGE_USD = 0.02      # سقف أمان لتكلفة كل فحص
 # --- أبرز التغريدات عن الترند المهم (Apify، أداة Kaito) ---
 # الأداة بتحاسب 15 نتيجة كحد أدنى بكل طلب (حوالي ثلث سنت)، فمنطلبها بس للترند المهم.
 TWEETS_ACTOR = "kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest"
+# مطفية: بتشتغل بس إذا انكتب "show_top_tweets": true بـ trend_settings بـ sources.json
 TWEETS_PER_TREND = 3              # كم تغريدة نعرض
 MAX_TWEET_LOOKUPS_PER_CHECK = 3   # سقف طلبات التغريدات بكل فحص
 TWEETS_MAX_CHARGE_USD = 0.02
@@ -260,6 +261,7 @@ def load_sources():
         "feeds": feeds,
         "country": str(settings.get("country") or "SA").strip(),
         "per_check": per_check,
+        "show_tweets": settings.get("show_top_tweets") is True,
         "national": compile_words(data.get("national_keywords")),
         "raw_national": [str(w) for w in data.get("national_keywords") or []],
         "ignore": compile_words(data.get("ignore_trend_words")),
@@ -745,7 +747,7 @@ def check_trends(state, cfg, now):
             judged.pop(t["key"], None)
             continue
         tweets = []
-        if lookups < MAX_TWEET_LOOKUPS_PER_CHECK:
+        if cfg["show_tweets"] and lookups < MAX_TWEET_LOOKUPS_PER_CHECK:
             lookups += 1
             try:
                 tweets = fetch_top_tweets(t, cfg["blocked"])
