@@ -1,7 +1,7 @@
 {
   "trend_settings": {
     "country": "SA",
-    "trends_per_check": 15
+    "trends_per_check": 5
   },
   "news_feeds": [
     {
