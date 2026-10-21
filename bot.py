@@ -25,7 +25,8 @@ from email.utils import parsedate_to_datetime
 from zoneinfo import ZoneInfo
 
 # ======================= الإعدادات (يمكن تعديلها) =======================
-FETCH_EVERY_MINUTES = 60          # كل قديش نفحص المصادر
+X_FETCH_EVERY_MINUTES = 120       # كل قديش نفحص X (كل العملاء بطلب واحد)
+LI_FETCH_EVERY_MINUTES = 180      # كل قديش نفحص لينكدإن
 RETRY_AFTER_FAIL_MINUTES = 20     # إذا فشل الفحص، متى نعيد المحاولة
 MAX_ALERTS_PER_RUN = 20           # سقف التنبيهات بكل فحص حتى ما ينغرق الجروب
 MAX_AGE_HOURS = 12                # ما نبعت خبر أقدم من هيك (خبر بارد)
@@ -34,14 +35,18 @@ LATEST_PER_CLIENT = 8             # كم خبر نعرض لكل عميل بأم�
 TEXT_LIMIT = 700                  # أقصى طول لنص الخبر بالرسالة
 
 # --- X (تويتر) ---
+# ملاحظة: أداة X بتحاسب على 15 نتيجة كحد أدنى بكل طلب (بتكمّل بنتائج وهمية)،
+# فكل ما قلّ عدد الطلبات قلّت التكلفة. لهيك منجمع حسابات كل العملاء بطلب واحد.
 X_ACTOR = "kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest"
-X_MAX_ITEMS_PER_QUERY = 40        # أقصى عدد تغريدات بكل طلب
-X_HANDLES_PER_QUERY = 8           # كم حساب نجمع بطلب واحد
+X_MAX_ITEMS_PER_QUERY = 60        # أقصى عدد تغريدات بكل طلب
+X_HANDLES_PER_QUERY = 20          # كم حساب نجمع بطلب واحد (كل العملاء)
 X_MAX_CHARGE_USD = 0.05           # سقف أمان لتكلفة كل طلب
 X_INCLUDE_REPLIES = False         # الردود على الناس ما بتهمنا
 X_INCLUDE_RETWEETS = False        # إعادة النشر ما بتهمنا
 
 # --- لينكدإن ---
+# ملاحظة: أداة لينكدإن بتحاسب 0.1 سنت على كل صفحة ما فيها جديد،
+# فكل ما قلّ عدد الفحوصات قلّت التكلفة.
 LI_ACTOR = "harvestapi~linkedin-company-posts"
 LI_MAX_POSTS_PER_PAGE = 10        # أقصى عدد منشورات لكل صفحة بكل فحص
 LI_MAX_CHARGE_USD = 0.05          # سقف أمان لتكلفة كل طلب (= 25 منشور تقريباً)
@@ -59,6 +64,8 @@ APIFY_TOKEN = os.environ.get("APIFY_TOKEN", "").strip()
 
 HANDLE_RE = re.compile(r"^[A-Za-z0-9_]{1,15}$")
 PLATFORMS = {"x": "X", "li": "لينكدإن"}
+FETCH_EVERY = {"x": X_FETCH_EVERY_MINUTES, "li": LI_FETCH_EVERY_MINUTES}
+X_JOB = "all|x"                   # مهمة X وحدة لكل العملاء
 
 
 # ----------------------------- أدوات عامة -----------------------------
@@ -102,6 +109,17 @@ def saudi_time(dt=None, with_date=False):
     if with_date:
         text = f"{dt.day}/{dt.month} · {text}"
     return text
+
+
+def every_text(minutes):
+    """يحوّل الدقائق لكلام مفهوم: 60 → ساعة، 120 → ساعتين، 180 → 3 ساعات"""
+    if minutes == 60:
+        return "ساعة"
+    if minutes == 120:
+        return "ساعتين"
+    if minutes % 60 == 0:
+        return f"{minutes // 60} ساعات"
+    return f"{minutes} دقيقة"
 
 
 def load_json(path, default):
@@ -240,7 +258,10 @@ def format_latest(state, clients):
     if state.get("last_fetch"):
         blocks[0] += f"\n⏰ آخر فحص: {saudi_time(parse_time(state['last_fetch']))}"
     for c in clients:
-        items = recent.get(c["name"], [])[:LATEST_PER_CLIENT]
+        # نعرض بس أخبار الحسابات الموجودة حالياً بالقائمة (اللي انشالت ما بتطلع)
+        allowed = {h.lower() for h in c["handles"]}
+        items = [t for t in recent.get(c["name"], [])
+                 if t["platform"] != "x" or t["label"].lower() in allowed][:LATEST_PER_CLIENT]
         lines = [f"\n{c['emoji']} <b>{html.escape(c['name'])}</b>"]
         if not items:
             lines.append("ما في أخبار جديدة لسا.")
@@ -254,7 +275,8 @@ def format_latest(state, clients):
 
 def format_sources(clients):
     lines = ["📡 <b>المصادر اللي البوت بيراقبها</b>",
-             f"يفحص كل {FETCH_EVERY_MINUTES} دقيقة تقريباً."]
+             f"يفحص X كل {every_text(X_FETCH_EVERY_MINUTES)}، "
+             f"ولينكدإن كل {every_text(LI_FETCH_EVERY_MINUTES)} تقريباً."]
     for c in clients:
         lines.append(f"\n{c['emoji']} <b>{html.escape(c['name'])}</b>")
         if c["handles"]:
@@ -348,11 +370,16 @@ def x_normalize(item, wanted):
     }
 
 
-def fetch_x(client, since):
-    wanted = {h.lower(): h for h in client["handles"]}
+def fetch_x(clients, since):
+    """طلب واحد لحسابات كل العملاء مع بعض (أرخص من طلب لكل عميل)"""
+    wanted = {}
+    for c in clients:
+        for h in c["handles"]:
+            wanted.setdefault(h.lower(), h)
+    handles = list(wanted.values())
     found = {}
-    for i in range(0, len(client["handles"]), X_HANDLES_PER_QUERY):
-        chunk = client["handles"][i:i + X_HANDLES_PER_QUERY]
+    for i in range(0, len(handles), X_HANDLES_PER_QUERY):
+        chunk = handles[i:i + X_HANDLES_PER_QUERY]
         payload = {"twitterContent": x_query(chunk, since), "queryType": "Latest",
                    "maxItems": X_MAX_ITEMS_PER_QUERY}
         for item in run_actor(X_ACTOR, payload, X_MAX_CHARGE_USD) or []:
@@ -390,9 +417,10 @@ def li_normalize(item):
     }
 
 
-def fetch_li(client, since):
+def fetch_li(clients, since):
+    pages = [p["url"] for c in clients for p in c["pages"]]
     payload = {
-        "targetUrls": [p["url"] for p in client["pages"]],
+        "targetUrls": pages,
         "maxPosts": LI_MAX_POSTS_PER_PAGE,
         # بس المنشورات بعد آخر فحص (لازم نص، مش رقم)
         "postedLimitDate": since.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -410,12 +438,20 @@ def fetch_li(client, since):
 
 
 def jobs_for(clients):
-    """كل (عميل × منصة) هو "مهمة" لحالها بوقت آخر فحص خاص فيها"""
+    """كل "مهمة" إلها وقت آخر فحص خاص فيها:
+    X مهمة وحدة لكل العملاء (طلب واحد)، ولينكدإن مهمة لكل عميل"""
+    x_clients = [c for c in clients if c["handles"]]
+    if x_clients:
+        yield X_JOB, "x", x_clients, fetch_x
     for c in clients:
-        if c["handles"]:
-            yield c, "x", fetch_x
         if c["pages"]:
-            yield c, "li", fetch_li
+            yield f"{c['name']}|li", "li", [c], fetch_li
+
+
+def job_title(key, platform):
+    """اسم المهمة برسالة الفشل"""
+    who = "كل العملاء" if key == X_JOB else key.split("|")[0]
+    return f"{PLATFORMS[platform]} لـ {who}"
 
 
 # ----------------------------- التشغيل -----------------------------
@@ -447,6 +483,21 @@ def migrate(state):
             "أول ما ينزل.\n\n")
 
 
+def merge_x_jobs(state, clients):
+    """قبل: X كان مهمة لكل عميل. هلأ: مهمة وحدة للكل.
+    منبلّش المهمة الجديدة من أقدم فحص ناجح، حتى ما يفوتنا شي وما نعيد إرسال شي"""
+    last_ok = state["last_ok"]
+    old_keys = [k for k in last_ok if k.endswith("|x") and k != X_JOB]
+    if X_JOB not in last_ok:
+        times = [parse_time(last_ok[k]) for k in old_keys]
+        times = [t for t in times if t]
+        if times:
+            last_ok[X_JOB] = min(times).isoformat()
+    for k in old_keys:
+        last_ok.pop(k, None)
+        state.get("fail_streaks", {}).pop(k, None)
+
+
 def main():
     missing = [n for n, v in [("TELEGRAM_BOT_TOKEN", BOT_TOKEN),
                               ("TELEGRAM_CHAT_ID", CHAT_ID),
@@ -470,6 +521,7 @@ def main():
                 state["baselined"].append(key)
                 if state.get("last_fetch"):
                     state["last_ok"].setdefault(key, state["last_fetch"])
+    merge_x_jobs(state, clients)
 
     next_fetch = parse_time(state.get("next_fetch"))
     if announcement or next_fetch is None or now >= next_fetch:
@@ -480,35 +532,43 @@ def main():
 
         jobs = list(jobs_for(clients))
         failed, alerts = [], []
-        for c, platform, fetch in jobs:
-            key = f"{c['name']}|{platform}"
+        for key, platform, job_clients, fetch in jobs:
             last_ok = parse_time(state["last_ok"].get(key))
-            # بإعادة المحاولة منعيد بس اللي فشل، مش اللي نجح من شوي
-            if last_ok and now - last_ok < timedelta(minutes=FETCH_EVERY_MINUTES - 5):
+            # كل منصة إلها وتيرة، وبإعادة المحاولة منعيد بس اللي فشل
+            if last_ok and now - last_ok < timedelta(minutes=FETCH_EVERY[platform] - 5):
                 continue
             since = max(last_ok - timedelta(minutes=OVERLAP_MINUTES), oldest_allowed) \
                 if last_ok else oldest_allowed
             try:
-                items = fetch(c, since)
+                items = fetch(job_clients, since)
             except Exception as e:
-                print(f"{c['name']} / {PLATFORMS[platform]} failed: {e}")
+                print(f"{job_title(key, platform)} failed: {e}")
                 failed.append(key)
                 continue
-            fresh = [t for t in items if t["key"] not in seen
-                     and parse_time(t["created_at"]) >= oldest_allowed]
-            first_time = key not in state["baselined"]
-            print(f"{c['name']} / {PLATFORMS[platform]}: {len(items)} items, {len(fresh)} new"
-                  + (" (first check: saved silently)" if first_time else "") + ".")
-            for t in fresh:
-                seen[t["key"]] = now.isoformat()
-                if not first_time:
-                    alerts.append((t, c))
-            if first_time:
-                state["baselined"].append(key)
+            new_keys = set()
+            for c in job_clients:
+                # نوزّع النتائج على أصحابها: تغريدات X حسب الحساب
+                mine_handles = {h.lower() for h in c["handles"]}
+                mine = [t for t in items
+                        if platform != "x" or t["label"].lower() in mine_handles]
+                fresh = [t for t in mine if t["key"] not in seen
+                         and parse_time(t["created_at"]) >= oldest_allowed]
+                bkey = f"{c['name']}|{platform}"
+                first_time = bkey not in state["baselined"]
+                print(f"{c['name']} / {PLATFORMS[platform]}: {len(mine)} items, {len(fresh)} new"
+                      + (" (first check: saved silently)" if first_time else "") + ".")
+                for t in fresh:
+                    new_keys.add(t["key"])
+                    if not first_time:
+                        alerts.append((t, c))
+                if first_time:
+                    state["baselined"].append(bkey)
+                keep = {t["key"]: t for t in fresh + recent.get(c["name"], [])}
+                recent[c["name"]] = sorted(keep.values(), key=lambda t: t["created_at"],
+                                           reverse=True)[:LATEST_PER_CLIENT]
+            for k in new_keys:
+                seen[k] = now.isoformat()
             state["last_ok"][key] = now.isoformat()
-            keep = {t["key"]: t for t in fresh + recent.get(c["name"], [])}
-            recent[c["name"]] = sorted(keep.values(), key=lambda t: t["created_at"],
-                                       reverse=True)[:LATEST_PER_CLIENT]
 
         if announcement:
             send_message(announcement + "• /latest آخر الأخبار المحفوظة لكل عميل\n"
@@ -526,21 +586,21 @@ def main():
         # عدّاد فشل لكل مهمة لحالها، وتنبيه وحيد إذا فشلت 3 مرات ورا بعض
         streaks = state.setdefault("fail_streaks", {})
         state.pop("fail_streak", None)
-        for c, platform, _ in jobs:
-            key = f"{c['name']}|{platform}"
+        for key, platform, _, _ in jobs:
             if key in failed:
                 streaks[key] = streaks.get(key, 0) + 1
                 if streaks[key] == 3:
-                    send_message(f"⚠️ <b>البوت ما قدر يجيب أخبار {PLATFORMS[platform]} "
-                                 f"لـ {html.escape(c['name'])} من 3 محاولات متتالية.</b>\n"
+                    send_message(f"⚠️ <b>البوت ما قدر يجيب أخبار "
+                                 f"{html.escape(job_title(key, platform))} "
+                                 f"من 3 محاولات متتالية.</b>\n"
                                  "افحصوا تبويب Actions على GitHub ورصيد Apify.")
             elif state["last_ok"].get(key) == now.isoformat():
                 streaks.pop(key, None)
         if len(failed) < len(jobs):
             state["last_fetch"] = now.isoformat()
         # الفحص الجاي: أول مهمة بيصير دورها، أو بعد 20 دقيقة إذا في شي فشل
-        due = [parse_time(state["last_ok"][f"{c['name']}|{p}"]) + timedelta(minutes=FETCH_EVERY_MINUTES)
-               for c, p, _ in jobs if state["last_ok"].get(f"{c['name']}|{p}")]
+        due = [parse_time(state["last_ok"][key]) + timedelta(minutes=FETCH_EVERY[platform])
+               for key, platform, _, _ in jobs if state["last_ok"].get(key)]
         if failed:
             due.append(now + timedelta(minutes=RETRY_AFTER_FAIL_MINUTES))
         state["next_fetch"] = (min(due) if due else now + timedelta(
