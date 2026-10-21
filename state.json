@@ -235,10 +235,47 @@
     "rss:50cc90f62a37fa6f": "2026-10-21T13:21:31.037926+00:00",
     "rss:b36a8ebf572310ba": "2026-10-21T13:21:31.037926+00:00",
     "rss:9148bd6cc00c2e20": "2026-10-21T13:21:31.037926+00:00",
-    "rss:adaec6abb6aedddb": "2026-10-21T13:21:31.037926+00:00"
+    "rss:adaec6abb6aedddb": "2026-10-21T13:21:31.037926+00:00",
+    "x:2112891674204778927": "2026-10-21T14:03:12.207637+00:00",
+    "x:2112898508470820990": "2026-10-21T14:03:12.207637+00:00",
+    "x:2112890706255908895": "2026-10-21T14:03:12.207637+00:00",
+    "x:2112871120432972129": "2026-10-21T14:03:12.207637+00:00",
+    "li:7518658359370158080": "2026-10-21T14:03:12.207637+00:00",
+    "rss:11a4771d323639bd": "2026-10-21T14:03:12.207637+00:00",
+    "rss:d1b1d389a2db564b": "2026-10-21T14:03:12.207637+00:00",
+    "rss:13f4be0b07c251bb": "2026-10-21T14:03:12.207637+00:00",
+    "rss:884ab04caa5acf16": "2026-10-21T14:03:12.207637+00:00",
+    "rss:b70eab83337d4c1e": "2026-10-21T14:03:12.207637+00:00"
   },
   "recent": {
     "أحمد المنصور": [
+      {
+        "key": "x:2112898508470820990",
+        "platform": "x",
+        "label": "swa_gov",
+        "author_name": "الهيئة السعودية للمياه",
+        "text": "بالتزامن مع شهر الأمن السيبراني، تواصل أكاديمية المياه جهودها في تعزيز الوعي بالمخاطر الرقمية، من خلال برنامج تدريبي يعرّف بأساسيات حماية البيانات والشبكات والأنظمة، ويسهم في ترسيخ الممارسات الرقمية الآمنة.",
+        "created_at": "2026-10-21T13:27:14+00:00",
+        "url": "https://x.com/swa_gov/status/2112898508470820990"
+      },
+      {
+        "key": "li:7518658359370158080",
+        "platform": "li",
+        "label": "-nwc",
+        "author_name": "NWC",
+        "text": "بحضور صاحب السمو الملكي الأمير فيصل بن نواف بن عبدالعزيز، أمير منطقة الجوف، استعرضنا منجزات وحدة أعمال المياه بالجوف في القطاع الشمالي، وجهود #شركة_المياه_الوطنية في تطوير الخدمات المائية والارتقاء بجودة الحياة، تحقيقًا لمستهدفات #رؤية_السعودية_2030",
+        "created_at": "2026-10-21T13:04:02.791000+00:00",
+        "url": "https://www.linkedin.com/posts/-nwc_aecaezaeraerabraepaesaetaeyaepaevabraepaesaewaefaeuaeyaer-activity-7518658359370158080-2sa2"
+      },
+      {
+        "key": "x:2112891674204778927",
+        "platform": "x",
+        "label": "MEWA_KSA",
+        "author_name": "وزارة البيئة والمياه والزراعة",
+        "text": "جهود تتكامل؛ لصون الموارد الطبيعية نحو مستقبل أكثر استدامة 🍃 https://t.co/Uf1NptGMAZ",
+        "created_at": "2026-10-21T13:00:05+00:00",
+        "url": "https://x.com/MEWA_KSA/status/2112891674204778927"
+      },
       {
         "key": "rss:1b2623bde099a944",
         "platform": "rss",
@@ -267,6 +304,15 @@
         "url": "https://sabq.org/article/جامعة-جازان-تُقيم-ورشة-عمل-ودورة-تدريبية-في-الأمن-السيبراني-لمنسوبي-الجهات-الحكومية"
       },
       {
+        "key": "x:2112871120432972129",
+        "platform": "x",
+        "label": "EasternEamana",
+        "author_name": "أمانة المنطقة الشرقية",
+        "text": "📸 | شراكة مجتمعية لتعزيز #جودة_الحياة🏞️\n\n✍🏻 وقّع معالي أمين #المنطقة_الشرقية المهندس فهد بن محمد الجبير، والرئيس التنفيذي لشركة المواساة للخدمات الطبية الأستاذ ناصر بن سلطان السبيعي، مذكرة تفاهم لتطوير حديقة ومضمار رياضي بحي أحد في #الدمام، على مساحة تتجاوز 11 ألف م².🌿\n\n#وزارة_البلديات_والإسكان \n#أمانة_المنطقة_الشرقية | #الشرقية_أمانة",
+        "created_at": "2026-10-21T11:38:25+00:00",
+        "url": "https://x.com/EasternEamana/status/2112871120432972129"
+      },
+      {
         "key": "rss:a30d20aa57f36ee2",
         "platform": "rss",
         "label": "سبق",
@@ -274,45 +320,18 @@
         "text": "أمير الباحة يدشّن جائزة التميز في العمل الأهلي بدورتها السادسة\n\nدشّن أمير منطقة الباحة الأمير الدكتور حسام بن سعود جائزة التميز في العمل الأهلي في دورتها السادسة، الموجهة للجمعيات الأهلية ومؤسسات القطاع غير الربحي، بهدف نشر ثقافة الجودة والتميز المؤسسي، وتحفيز الجمعيات على تطوير أدائها وتعزيز الحوكمة، مع بدء استقبال المشاركات وإعلان النتائج في 27 ديسمبر 2026.",
         "created_at": "2026-10-21T11:31:33+00:00",
         "url": "https://sabq.org/article/أمير-الباحة-يدشّن-جائزة-التميز-في-العمل-الأهلي-بدورتها-السادسة"
-      },
-      {
-        "key": "rss:ba160773872b2c00",
-        "platform": "rss",
-        "label": "سبق",
-        "author_name": "سبق",
-        "text": "من الحفر الملوثة إلى محارق بألف درجة.. تقنيات حديثة لحماية البيئة من مخلفات الحيوانات النافقة\n\nكشف المهندس محمد المعيذر لـ\"سبق\" عن دور المحارق المتخصصة في التخلص الآمن من الحيوانات والدواجن النافقة، بوصفها بديلاً للحفر والدفن الذي يهدد التربة والمياه الجوفية. وأوضح أن المحارق المرخَّصة من المركز الوطني لإدارة النفايات تتنوع سعاتها من 50 كيلوغرامًا حتى طن في الساعة، مع حرارة تصل إلى ألف درجة مئوية.",
-        "created_at": "2026-10-21T10:22:09+00:00",
-        "url": "https://sabq.org/article/من-الحفر-الملوثة-إلى-محارق-بألف-درجة-تقنيات-حديثة-لحماية-البيئة-من-مخلفات-الحيوانات-النافقة"
-      },
-      {
-        "key": "x:2112844267815080279",
-        "platform": "x",
-        "label": "EasternEamana",
-        "author_name": "أمانة المنطقة الشرقية",
-        "text": "🌿 | مسطحات خضراء أكثر حيوية وجمالًا\n\n#أمانة_المنطقة_الشرقية ممثلةً بـ #بلدية_عين_دار، تواصل أعمال صيانة المسطحات الخضراء في الحدائق العامة بمركز عين دار والمراكز المجاورة، لتعزيز جاذبية المرافق العامة والارتقاء بالمشهد الحضري و #جودة_الحياة.✨\n\n#وزارة_البلديات_والإسكان\n#الشرقية_أمانة | #مدن_أجمل\n#تحسين_المشهد_الحضري",
-        "created_at": "2026-10-21T09:51:42+00:00",
-        "url": "https://x.com/EasternEamana/status/2112844267815080279"
-      },
-      {
-        "key": "x:2112843923236250031",
-        "platform": "x",
-        "label": "EasternEamana",
-        "author_name": "أمانة المنطقة الشرقية",
-        "text": "*أثرك يبدأ بخطوة، ورسالتك قد تصنع فرقًا في حياة امرأة*.💗\n\nساهموا معنا في نشر الوعي بسرطان الثدي، وتعزيز ثقافة الكشف المبكر، وتشجيع السيدات على المبادرة بالفحص\n*من خلال الفرص التطوعية المتاحة لأفراد المجتمع.*\n\n📌 للتسجيل والمشاركة في الفرص التطوعية:\nhttps://t.co/wzupO191w2\n\nساهموا بنشر الفرص التطوعية وبترسيخ ثقافة التطوع بالمنطقة الشرقية ✨\n\n@E1_Cluster| #الشرقية_أمانة",
-        "created_at": "2026-10-21T09:50:20+00:00",
-        "url": "https://x.com/EasternEamana/status/2112843923236250031"
-      },
-      {
-        "key": "x:2112829784770449854",
-        "platform": "x",
-        "label": "MEWA_KSA",
-        "author_name": "وزارة البيئة والمياه والزراعة",
-        "text": "البومة الفرعونية 🦉 \nحارسة الليل، وحلقة التوازن في النظام البيئي. https://t.co/QVOGi8JWT9",
-        "created_at": "2026-10-21T08:54:09+00:00",
-        "url": "https://x.com/MEWA_KSA/status/2112829784770449854"
       }
     ],
     "فرحان العنزي": [
+      {
+        "key": "x:2112890706255908895",
+        "platform": "x",
+        "label": "SDAIA_SA",
+        "author_name": "SDAIA",
+        "text": "من تحليل البيانات والتنبؤ إلى بناء نماذج تعلم الآلة وتطوير حلول الذكاء الاصطناعي.\nطوّر مهاراتك التقنية، واكتسب خبرات تطبيقية تواكب متطلبات المستقبل، من خلال البرامج التدريبية التي تقدمها #أكاديمية_سدايا.\nاكتشف البرامج وسجّل الآن:\nhttps://t.co/qyZjqARyCe\n#عام_الذكاء_الاصطناعي https://t.co/olhN0l5qEw",
+        "created_at": "2026-10-21T12:56:14+00:00",
+        "url": "https://x.com/SDAIA_SA/status/2112890706255908895"
+      },
       {
         "key": "x:2112854483608686768",
         "platform": "x",
@@ -375,20 +394,11 @@
         "text": "لو حاسس إن مجهودك بالجيم ضايع، اقرأ هذا:\n\n8 أشياء غيّرت نتيجتي بشكل ملحوظ: https://t.co/nixBHrwEGf",
         "created_at": "2026-10-21T07:00:03+00:00",
         "url": "https://x.com/wathefah/status/2112801071022105002"
-      },
-      {
-        "key": "li:7518551822157176832",
-        "platform": "li",
-        "label": "infographics-insights",
-        "author_name": "Useful Infographics",
-        "text": "Coaching and mentoring are not the same.\nThis is how they are different.\nAnd this is how to become a unique value-added coach.\n\n\n\nGreat post by: Jeroen Kraaijenbrink\n\n\nOriginal post below\n\n\n⬇️⬇️⬇️\n\n\nCoaching and mentoring are not the same.\nThis is how they are different.\nAnd this is how to become a unique value-added coach.\n\nMany people speak about coaching and mentoring as if they are interchangeable. They are not. And understanding the difference is one of the most important things you can do for your own development and for the growth of the people you support.\n\nThis visual captures a truth that often gets lost in practice. Coaching and mentoring sit on the same spectrum, yet they serve different purposes. \n\nCoaching creates space for people to think for themselves. It invites reflection, draws out insight, and helps someone strengthen their own clarity and autonomy. The coach does not tell you what to do. The coach makes it possible for you to discover it.\n\nMentoring works differently. It draws on the lived experience of someone who has walked the path before you. The mentor shares stories, offers guidance, transfers knowledge and culture, and helps you navigate decisions with wisdom earned over time. A great mentor can shorten your learning curve in ways no book or course ever can.\n\nBoth practices share a deep human foundation: empathy, trust, curiosity, listening, and meaning making. These are the qualities that allow any form of guidance to become transformational instead of transactional.\n\nThe question is not which one is better. It is where you need to be on the spectrum at a specific moment. Sometimes you need a coach who helps you step back from the noise and find your own direction. Sometimes you need a mentor who helps you see around corners you have not yet learned to notice. And often, the most impactful relationships blend both, shifting seamlessly as the situation requires.\n\nThis is also why becoming a truly effective coach today requires more than a single skillset. You need the coaching foundations that cultivate autonomy and critical thinking. You also need the ability to draw from your experience responsibly and to know when guidance supports growth and when it risks taking it away.\n\n______________\n\n\nDM us to be featured on our next post\n\nFollow for more Useful Infographics",
-        "created_at": "2026-10-21T06:00:42.340000+00:00",
-        "url": "https://www.linkedin.com/posts/infographics-insights_coaching-and-mentoring-are-not-the-same-activity-7518551822157176832-1Go6"
       }
     ]
   },
-  "last_fetch": "2026-10-21T13:21:31.037926+00:00",
-  "next_fetch": "2026-10-21T13:31:31.037926+00:00",
+  "last_fetch": "2026-10-21T14:03:12.207637+00:00",
+  "next_fetch": "2026-10-21T14:13:12.207637+00:00",
   "baselined": [
     "أحمد المنصور|x",
     "فرحان العنزي|x",
@@ -398,15 +408,11 @@
     "فرحان العنزي|rss|سبق"
   ],
   "last_ok": {
-    "أحمد المنصور|li": "2026-10-21T10:45:15.544277+00:00",
-    "فرحان العنزي|li": "2026-10-21T10:45:15.544277+00:00",
-    "all|x": "2026-10-21T10:45:15.544277+00:00",
-    "rss|سبق": "2026-10-21T13:21:31.037926+00:00"
+    "أحمد المنصور|li": "2026-10-21T14:03:12.207637+00:00",
+    "فرحان العنزي|li": "2026-10-21T14:03:12.207637+00:00",
+    "all|x": "2026-10-21T14:03:12.207637+00:00",
+    "rss|سبق": "2026-10-21T14:03:12.207637+00:00"
   },
-  "fail_streaks": {
-    "all|x": 1
-  },
-  "retry_at": {
-    "all|x": "2026-10-21T13:41:31.037926+00:00"
-  }
+  "fail_streaks": {},
+  "retry_at": {}
 }
