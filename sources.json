@@ -1,9 +1,53 @@
 {
+  "trend_settings": {
+    "country": "SA",
+    "trends_per_check": 15
+  },
   "news_feeds": [
     {
       "name": "سبق",
       "url": "https://sabq.org/api/rss/articles"
     }
+  ],
+  "national_keywords": [
+    "السعودية",
+    "المملكة",
+    "الوطن",
+    "وطني العزيز",
+    "ولي العهد",
+    "محمد بن سلمان",
+    "الملك سلمان",
+    "خادم الحرمين",
+    "القائد",
+    "قائد",
+    "قيادة",
+    "رؤية 2030",
+    "اليوم الوطني",
+    "يوم التأسيس",
+    "حضارة",
+    "تطور",
+    "الحوثي",
+    "الدفاع الجوي",
+    "اعتراض",
+    "نيوم",
+    "القدية",
+    "البحر الأحمر"
+  ],
+  "ignore_trend_words": [
+    "الهلال",
+    "النصر",
+    "الاتحاد",
+    "الأهلي",
+    "دوري",
+    "مباراة",
+    "مسلسل",
+    "حفلة",
+    "موسم الرياض",
+    "الموسم",
+    "عروض",
+    "خصم",
+    "كوبون",
+    "أغنية"
   ],
   "blocked_words": [
     "إباحي",
@@ -33,59 +77,7 @@
     {
       "name": "أحمد المنصور",
       "emoji": "💧",
-      "x_accounts": [
-        "MEWA_KSA",
-        "swa_gov",
-        "nwc_media",
-        "sharakat_sa",
-        "SaudiWaterWeek",
-        "EasternEamana"
-      ],
-      "linkedin_pages": [
-        "https://www.linkedin.com/company/awptco/",
-        "https://www.linkedin.com/company/أسبوع-المياه-السعودي-saudi-water-week/",
-        "https://www.linkedin.com/company/mewa-ksa/",
-        "https://www.linkedin.com/company/-nwc/",
-        "https://www.linkedin.com/company/water-electricity-co/"
-      ],
-      "trusted_accounts": [
-        "MEWA_KSA",
-        "EasternEamana",
-        "https://www.linkedin.com/company/mewa-ksa/"
-      ],
-      "keywords": [
-        "مياه",
-        "مائي",
-        "تحلية",
-        "الصرف الصحي",
-        "معالجة",
-        "السدود",
-        "الري",
-        "الشراكة بين القطاعين",
-        "التخصيص",
-        "خصخصة",
-        "حوكمة",
-        "دراسات الحالة",
-        "دراسة حالة",
-        "البنية التحتية",
-        "الاستدامة",
-        "الطاقة",
-        "الخريف",
-        "شراكات",
-        "زراعة",
-        "زراعي",
-        "بلدية",
-        "بلديات",
-        "ولي العهد",
-        "رؤية 2030",
-        "رؤية السعودية",
-        "water",
-        "desalination",
-        "wastewater",
-        "PPP",
-        "infrastructure",
-        "sustainability"
-      ],
+      "about": "الرئيس التنفيذي للاستراتيجية وتطوير الأعمال بشركة الخريف لتقنيات المياه والطاقة في السعودية. بيكتب على لينكدإن وX عن قطاع المياه والتحلية والصرف الصحي والبنية التحتية والشراكة بين القطاعين العام والخاص والتخصيص والحوكمة والاستدامة.",
       "news_keywords": [
         "مياه",
         "مائي",
@@ -100,11 +92,40 @@
         "حوكمة",
         "دراسات الحالة",
         "دراسة حالة"
+      ],
+      "x_accounts": [
+        "MEWA_KSA",
+        "swa_gov",
+        "nwc_media",
+        "sharakat_sa",
+        "SaudiWaterWeek",
+        "EasternEamana"
+      ],
+      "linkedin_pages": [
+        "https://www.linkedin.com/company/awptco/",
+        "https://www.linkedin.com/company/أسبوع-المياه-السعودي-saudi-water-week/",
+        "https://www.linkedin.com/company/mewa-ksa/",
+        "https://www.linkedin.com/company/-nwc/",
+        "https://www.linkedin.com/company/water-electricity-co/"
       ]
     },
     {
       "name": "فرحان العنزي",
       "emoji": "👥",
+      "about": "خبير سعودي بالموارد البشرية والذكاء الاصطناعي. بيكتب على لينكدإن وX عن سوق العمل والتوظيف والتوطين وتنمية القدرات ورأس المال البشري والذكاء الاصطناعي والتحول الرقمي.",
+      "news_keywords": [
+        "الموارد البشرية",
+        "سوق العمل",
+        "التوطين",
+        "السعودة",
+        "توظيف",
+        "رأس المال البشري",
+        "تنمية القدرات",
+        "الذكاء الاصطناعي",
+        "أتمتة",
+        "التحول الرقمي",
+        "سدايا"
+      ],
       "x_accounts": [
         "hrsd_sa",
         "Ahmed_S_Alrajhi",
@@ -118,52 +139,6 @@
         "https://www.linkedin.com/company/mimgov/",
         "https://www.linkedin.com/company/ministry-of-human-resources-and-social-development-ksa/",
         "https://www.linkedin.com/company/infographics-insights/"
-      ],
-      "trusted_accounts": [],
-      "keywords": [
-        "الموارد البشرية",
-        "سوق العمل",
-        "توظيف",
-        "وظائف",
-        "وظيفة",
-        "التوطين",
-        "السعودة",
-        "مهارات",
-        "تدريب",
-        "تنمية القدرات",
-        "رأس المال البشري",
-        "الذكاء الاصطناعي",
-        "وكلاء",
-        "أتمتة",
-        "التحول الرقمي",
-        "البيانات",
-        "ولي العهد",
-        "رؤية 2030",
-        "رؤية السعودية",
-        "HR",
-        "human resources",
-        "workforce",
-        "talent",
-        "hiring",
-        "recruitment",
-        "AI",
-        "artificial intelligence",
-        "agentic",
-        "automation",
-        "digital transformation"
-      ],
-      "news_keywords": [
-        "الموارد البشرية",
-        "سوق العمل",
-        "التوطين",
-        "السعودة",
-        "توظيف",
-        "رأس المال البشري",
-        "تنمية القدرات",
-        "الذكاء الاصطناعي",
-        "أتمتة",
-        "التحول الرقمي",
-        "سدايا"
       ]
     }
   ]
