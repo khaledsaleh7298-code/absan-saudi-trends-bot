@@ -1,13 +1,19 @@
 """
-Absan Client Sources Bot
-------------------------
-يراقب حسابات X وصفحات لينكدإن اللي حددها كل عميل، ومواقع الأخبار (RSS)
-(ملف sources.json)، ويبعت كل خبر جديد بيخص العميل لجروب تيليغرام أول ما ينزل،
-مع اسم العميل والرابط.
+Absan Trends Bot
+----------------
+كل ساعة: بيجيب ترندات X بالسعودية، وبيحكم على كل ترند جديد:
+هل هو فرصة حقيقية لواحد من عملاء عبسان، أو ترند وطني مهم؟
+- إذا آه: بيبعت رسالة بصوت 🔔، فيها لمين وليش، وخبر سبق عنه، وأبرز التغريدات.
+- إذا لأ: بيبعت رسالة صامتة 🔕 قصيرة، بس حتى تعرفوا إنه شغّال.
+
+«العقل» اللي بيحكم إله نسختين:
+  1) كلمات (sources.json): شغّالة دايماً.
+  2) ذكاء اصطناعي (Claude): بيشتغل لحاله لما ينضاف ANTHROPIC_API_KEY
+     بـ GitHub Secrets. وإذا تعطّل، البوت بيرجع للكلمات.
 
 الأوامر داخل الجروب:
-  /latest  آخر الأخبار المحفوظة لكل عميل
-  /sources الحسابات والصفحات اللي البوت بيراقبها
+  /latest  آخر الترندات المهمة اللي انبعتت
+  /sources شو البوت بيراقب وكيف بيحكم
 
 يشتغل على GitHub Actions. الأسرار تُقرأ من Secrets ولا تُكتب في الكود أبداً.
 """
@@ -28,54 +34,45 @@ from xml.etree import ElementTree
 from zoneinfo import ZoneInfo
 
 # ======================= الإعدادات (يمكن تعديلها) =======================
-X_FETCH_EVERY_MINUTES = 120       # كل قديش نفحص X (كل العملاء بطلب واحد)
-LI_FETCH_EVERY_MINUTES = 180      # كل قديش نفحص لينكدإن
+TRENDS_EVERY_MINUTES = 60         # كل قديش نفحص الترندات
 RETRY_AFTER_FAIL_MINUTES = 20     # إذا فشل الفحص، متى نعيد المحاولة
-MAX_ALERTS_PER_RUN = 20           # سقف التنبيهات بكل فحص حتى ما ينغرق الجروب
-MAX_AGE_HOURS = 12                # ما نبعت خبر أقدم من هيك (خبر بارد)
-OVERLAP_MINUTES = 15              # نرجع لورا شوي بكل فحص حتى ما يفوتنا شي
-LATEST_PER_CLIENT = 8             # كم خبر نعرض لكل عميل بأمر /latest
-TEXT_LIMIT = 700                  # أقصى طول لنص الخبر بالرسالة
+MAX_ALERTS_PER_CHECK = 5          # سقف الترندات المهمة بكل فحص
+SILENT_CHECK_MESSAGE = True       # رسالة صامتة لما ما يلاقي شي (حتى تعرفوا إنه شغّال)
+JUDGED_MEMORY_DAYS = 3            # قديش بيتذكر الترندات اللي حكم عليها
+LATEST_COUNT = 8                  # كم ترند بيعرض أمر /latest
+TEXT_LIMIT = 220                  # أقصى طول لنص التغريدة بالرسالة
 
-# --- X (تويتر) ---
-# ملاحظة: أداة X بتحاسب على 15 نتيجة كحد أدنى بكل طلب (بتكمّل بنتائج وهمية)،
-# فكل ما قلّ عدد الطلبات قلّت التكلفة. لهيك منجمع حسابات كل العملاء بطلب واحد.
-X_ACTOR = "kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest"
-X_MAX_ITEMS_PER_QUERY = 60        # أقصى عدد تغريدات بكل طلب
-X_HANDLES_PER_QUERY = 20          # كم حساب نجمع بطلب واحد (كل العملاء)
-X_MAX_CHARGE_USD = 0.05           # سقف أمان لتكلفة كل طلب
-X_INCLUDE_REPLIES = False         # الردود على الناس ما بتهمنا
-X_INCLUDE_RETWEETS = False        # إعادة النشر ما بتهمنا
+# --- ترندات X (Apify) ---
+TRENDS_ACTOR = "labrat011~x-trends-scraper"
+TRENDS_MAX_CHARGE_USD = 0.02      # سقف أمان لتكلفة كل فحص
 
-# --- لينكدإن ---
-# ملاحظة: أداة لينكدإن بتحاسب 0.1 سنت على كل صفحة ما فيها جديد،
-# فكل ما قلّ عدد الفحوصات قلّت التكلفة.
-LI_ACTOR = "harvestapi~linkedin-company-posts"
-LI_MAX_POSTS_PER_PAGE = 10        # أقصى عدد منشورات لكل صفحة بكل فحص
-LI_MAX_CHARGE_USD = 0.05          # سقف أمان لتكلفة كل طلب (= 25 منشور تقريباً)
-LI_INCLUDE_REPOSTS = False        # إعادة النشر بدون تعليق ما بتهمنا
+# --- أبرز التغريدات عن الترند المهم (Apify، أداة Kaito) ---
+# الأداة بتحاسب 15 نتيجة كحد أدنى بكل طلب (حوالي ثلث سنت)، فمنطلبها بس للترند المهم.
+TWEETS_ACTOR = "kaitoeasyapi~twitter-x-data-tweet-scraper-pay-per-result-cheapest"
+TWEETS_PER_TREND = 3              # كم تغريدة نعرض
+MAX_TWEET_LOOKUPS_PER_CHECK = 3   # سقف طلبات التغريدات بكل فحص
+TWEETS_MAX_CHARGE_USD = 0.02
 
-# --- مواقع الأخبار (RSS) ---
-# مجانية (بدون Apify)، فبنفحصها كل ما يصحى البوت تقريباً.
-# بتنشر كل شي، فما بينبعت منها إلا الخبر اللي فيه كلمة من news_keywords للعميل.
-RSS_FETCH_EVERY_MINUTES = 10      # كل قديش نفحص مواقع الأخبار
+# --- مواقع الأخبار (RSS، مجانية): بتعطي «سياق» الترند، يعني ليش طالع ---
+NEWS_HOURS = 6                    # منستعمل أخبار آخر كم ساعة
+NEWS_PER_TREND = 2                # كم خبر منعرض مع كل ترند
 RSS_USER_AGENT = "Mozilla/5.0 (compatible; AbsanNewsBot/1.0)"
+
+# --- الذكاء الاصطناعي (مطفي لحد ما ينضاف ANTHROPIC_API_KEY) ---
+AI_MODEL = "claude-haiku-5-5"
+AI_MAX_TOKENS = 4000
 
 STATE_FILE = "state.json"
 SOURCES_FILE = "sources.json"
-STATE_VERSION = 3                 # النسخة 3 = X + لينكدإن
+STATE_VERSION = 4                 # النسخة 4 = ترندات السعودية
 SAUDI_TZ = ZoneInfo("Asia/Riyadh")
+NATIONAL = "وطني"
 # =======================================================================
 
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
 CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
 APIFY_TOKEN = os.environ.get("APIFY_TOKEN", "").strip()
-
-HANDLE_RE = re.compile(r"^[A-Za-z0-9_]{1,15}$")
-PLATFORMS = {"x": "X", "li": "لينكدإن", "rss": "مواقع الأخبار"}
-FETCH_EVERY = {"x": X_FETCH_EVERY_MINUTES, "li": LI_FETCH_EVERY_MINUTES,
-               "rss": RSS_FETCH_EVERY_MINUTES}
-X_JOB = "all|x"                   # مهمة X وحدة لكل العملاء
+AI_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
 
 
 # ----------------------------- أدوات عامة -----------------------------
@@ -92,7 +89,7 @@ def parse_time(value):
 
 
 def parse_any_time(value):
-    """يقبل صيغة X (Thu Oct 17 09:30:41 +0000 2024) أو ISO أو timestamp"""
+    """يقبل صيغة X (Thu Oct 17 09:30:41 +0000 2024) أو ISO أو صيغة RSS"""
     if value in (None, ""):
         return None
     if isinstance(value, (int, float)):
@@ -121,15 +118,17 @@ def saudi_time(dt=None, with_date=False):
     return text
 
 
-def every_text(minutes):
-    """يحوّل الدقائق لكلام مفهوم: 60 → ساعة، 120 → ساعتين، 180 → 3 ساعات"""
-    if minutes == 60:
-        return "ساعة"
-    if minutes == 120:
-        return "ساعتين"
-    if minutes % 60 == 0:
-        return f"{minutes // 60} ساعات"
-    return f"{minutes} دقائق" if minutes <= 10 else f"{minutes} دقيقة"
+def hours_text(hours):
+    """1 → من ساعة، 2 → من ساعتين، 5 → من 5 ساعات"""
+    try:
+        hours = int(hours)
+    except (TypeError, ValueError):
+        return ""
+    if hours <= 1:
+        return "طالع من أقل من ساعة" if hours < 1 else "ترند من ساعة"
+    if hours == 2:
+        return "ترند من ساعتين"
+    return f"ترند من {hours} ساعات" if hours <= 10 else f"ترند من {hours} ساعة"
 
 
 def load_json(path, default):
@@ -146,16 +145,25 @@ def save_state(state):
         f.write("\n")
 
 
-def li_slug(url):
-    """يرجع اسم الصفحة من رابط لينكدإن: .../company/awptco/ → awptco"""
-    parts = urllib.parse.unquote(urllib.parse.urlparse(url).path).strip("/").split("/")
-    return parts[1] if len(parts) >= 2 and parts[0] in ("company", "showcase", "school") else ""
+def shorten(text, limit=TEXT_LIMIT):
+    text = re.sub(r"\s+", " ", (text or "").strip())
+    return text if len(text) <= limit else text[:limit].rstrip() + "…"
 
 
-# ----------------------------- الفلتر -----------------------------
-# طبقتين: 1) كلمات مجال العميل: الخبر لازم يكون فيه وحدة منها (إلا من حساب موثوق)
-#          2) كلمات ممنوعة: أي خبر فيه وحدة منها ما بينبعت أبداً
-AR_MARKS = re.compile(r"[ؐ-ًؚ-ٰٟۖ-ۭـ]")
+def compact_number(n):
+    try:
+        n = int(n)
+    except (TypeError, ValueError):
+        return ""
+    if n >= 1_000_000:
+        return f"{n / 1_000_000:.1f}M".replace(".0M", "M")
+    if n >= 1_000:
+        return f"{n / 1_000:.1f}K".replace(".0K", "K")
+    return str(n)
+
+
+# ----------------------------- الكلمات -----------------------------
+AR_MARKS = re.compile("[\u0610-\u061a\u064b-\u065f\u0670\u06d6-\u06ed\u0640]")  # التشكيل والتطويل
 
 
 def normalize(text):
@@ -163,7 +171,7 @@ def normalize(text):
     بيشيل التشكيل، وبيوحّد أ/إ/آ → ا، و ة → ه، و ى → ي، والهاشتاق بيصير كلام عادي"""
     text = AR_MARKS.sub("", text or "")
     text = re.sub("[إأآٱ]", "ا", text).replace("ة", "ه").replace("ى", "ي")
-    return re.sub(r"[#_]", " ", text).lower()
+    return re.sub(r"\s+", " ", re.sub(r"[#_]", " ", text)).strip().lower()
 
 
 def word_pattern(word):
@@ -171,7 +179,7 @@ def word_pattern(word):
     «مياه» بتلقط: مياه، المياه، والمياه، بالمياه، للمياه
     «الري» بتلقط: الري، للري... بس مش «الرياض» (لازم الكلمة كاملة)
     الكلمات الإنجليزية: كلمة كاملة بس، فـ AI ما بتلقط Dubai"""
-    w = normalize(word).strip()
+    w = normalize(word)
     if not w:
         return None
     if re.fullmatch(r"[a-z0-9 .&+-]+", w):
@@ -188,34 +196,20 @@ def word_pattern(word):
 
 
 def compile_words(words):
-    return [p for p in (word_pattern(str(w)) for w in words or []) if p]
+    """يرجع [(الكلمة، النمط)] حتى نعرف أي كلمة انلقطت"""
+    out = []
+    for w in words or []:
+        p = word_pattern(str(w))
+        if p:
+            out.append((str(w), p))
+    return out
 
 
-def source_id(value):
-    """يحوّل الحساب الموثوق لشكل واحد: @MEWA_KSA → mewa_ksa، ورابط لينكدإن → اسم الصفحة"""
-    value = str(value).strip()
-    if value.startswith("http") and "linkedin.com" in value:
-        return li_slug(value).lower()
-    if value.startswith("http"):
-        value = urllib.parse.urlparse(value).path.strip("/").split("/")[0]
-    return value.lstrip("@").lower()
-
-
-def passes_filter(item, client):
-    """يرجع (بيمرّ؟، السبب)"""
-    text = normalize(item["text"])
-    if any(p.search(text) for p in client["blocked"]):
-        return False, "كلمة ممنوعة"
-    if item["platform"] == "rss":
-        # مواقع الأخبار بتنشر كل شي: لازم كلمة من قائمة الأخبار الخاصة بالعميل
-        if not any(p.search(text) for p in client["news_keywords"]):
-            return False, "برا مجال العميل"
-        return True, ""
-    if (item["label"] or "").lower() in client["trusted"]:
-        return True, ""
-    if client["keywords"] and not any(p.search(text) for p in client["keywords"]):
-        return False, "برا مجال العميل"
-    return True, ""
+def first_match(compiled, text):
+    for word, p in compiled:
+        if p.search(text):
+            return word
+    return None
 
 
 def load_sources():
@@ -227,38 +221,20 @@ def load_sources():
     if not data or not isinstance(data.get("clients"), list):
         sys.exit(f"ملف {SOURCES_FILE} مش موجود أو ما فيه قائمة clients.")
 
-    blocked = compile_words(data.get("blocked_words"))
     clients = []
     for c in data["clients"]:
         name = str(c.get("name") or "").strip()
-        handles = []
-        for h in c.get("x_accounts") or []:
-            h = str(h).strip().lstrip("@")
-            if h.startswith("http"):
-                h = urllib.parse.urlparse(h).path.strip("/").split("/")[0]
-            if HANDLE_RE.match(h):
-                handles.append(h)
-            else:
-                print(f"تجاهلت حساب X غير صالح عند {name}: {h!r}")
-        pages = []
-        for u in c.get("linkedin_pages") or []:
-            u = str(u).strip()
-            slug = li_slug(u)
-            if slug:
-                pages.append({"url": "https://www.linkedin.com/company/"
-                                     + urllib.parse.quote(slug) + "/", "slug": slug})
-            else:
-                print(f"تجاهلت صفحة لينكدإن غير صالحة عند {name}: {u!r}")
-        news_keywords = compile_words(c.get("news_keywords"))
-        if name and (handles or pages or news_keywords):
-            clients.append({"name": name, "emoji": c.get("emoji") or "📰",
-                            "handles": handles, "pages": pages,
-                            "keywords": compile_words(c.get("keywords")),
-                            "news_keywords": news_keywords,
-                            "trusted": {source_id(s) for s in c.get("trusted_accounts") or []},
-                            "blocked": blocked})
+        if not name:
+            continue
+        clients.append({
+            "name": name,
+            "emoji": c.get("emoji") or "📰",
+            "about": str(c.get("about") or "").strip(),
+            "words": compile_words(c.get("news_keywords")),
+            "raw_words": [str(w) for w in c.get("news_keywords") or []],
+        })
     if not clients:
-        sys.exit(f"ملف {SOURCES_FILE} ما فيه ولا عميل عنده مصادر صالحة.")
+        sys.exit(f"ملف {SOURCES_FILE} ما فيه ولا عميل.")
 
     feeds = []
     for f in data.get("news_feeds") or []:
@@ -268,7 +244,27 @@ def load_sources():
             feeds.append({"name": fname, "url": furl})
         else:
             print(f"تجاهلت موقع أخبار غير صالح: {f!r}")
-    return clients, feeds
+
+    settings = data.get("trend_settings") or {}
+    try:
+        per_check = max(5, min(50, int(settings.get("trends_per_check") or 15)))
+    except (TypeError, ValueError):
+        per_check = 15
+    # بصمة القوائم: إذا عدّلت كلمة، البوت بيعيد الحكم على الترندات اللي لسا ما انبعتت
+    rules = json.dumps([data.get(k) for k in ("national_keywords", "ignore_trend_words", "blocked_words")]
+                       + [[c.get("news_keywords"), c.get("about")] for c in data["clients"]],
+                       ensure_ascii=False, sort_keys=True)
+    return {
+        "rules": hashlib.sha1(rules.encode("utf-8")).hexdigest()[:12],
+        "clients": clients,
+        "feeds": feeds,
+        "country": str(settings.get("country") or "SA").strip(),
+        "per_check": per_check,
+        "national": compile_words(data.get("national_keywords")),
+        "raw_national": [str(w) for w in data.get("national_keywords") or []],
+        "ignore": compile_words(data.get("ignore_trend_words")),
+        "blocked": compile_words(data.get("blocked_words")),
+    }
 
 
 # ----------------------------- تيليغرام -----------------------------
@@ -291,12 +287,13 @@ def telegram(method, **params):
         return {"ok": False}
 
 
-def send_message(text, reply_to=None):
+def send_message(text, reply_to=None, silent=False):
     params = {
         "chat_id": CHAT_ID,
         "text": text,
         "parse_mode": "HTML",
         "link_preview_options": {"is_disabled": True},
+        "disable_notification": silent,
     }
     if reply_to:
         params["reply_parameters"] = {"message_id": reply_to, "allow_sending_without_reply": True}
@@ -309,110 +306,6 @@ def send_message(text, reply_to=None):
             return False
         time.sleep(min(int(retry), 30))
     return False
-
-
-def shorten(text, limit=TEXT_LIMIT):
-    text = re.sub(r"\n{3,}", "\n\n", (text or "").strip())
-    return text if len(text) <= limit else text[:limit].rstrip() + "…"
-
-
-def format_alert(item, client):
-    source = html.escape(item["author_name"] or item["label"])
-    if item["platform"] == "x":
-        where = f"🏛 <b>{source}</b> (@{html.escape(item['label'])})"
-        link_text = "فتح التغريدة على X"
-    elif item["platform"] == "rss":
-        where = f"📰 <b>{source}</b>"
-        link_text = f"فتح الخبر على {source}"
-    else:
-        where = f"🏛 <b>{source}</b> · لينكدإن"
-        link_text = "فتح المنشور على لينكدإن"
-    lines = [
-        f"{client['emoji']} <b>خبر جديد · {html.escape(client['name'])}</b>",
-        "",
-        where,
-        "",
-        html.escape(shorten(item["text"])),
-        "",
-        f"⏰ نُشر: {saudi_time(parse_time(item['created_at']), with_date=True)}",
-        f'🔗 <a href="{html.escape(item["url"], quote=True)}">{link_text}</a>',
-    ]
-    return "\n".join(lines)
-
-
-def short_label(item):
-    if item["platform"] == "x":
-        return "@" + item["label"]
-    if item["platform"] == "rss":
-        return "📰 " + item["label"]
-    return "in · " + shorten(item["author_name"] or item["label"], 25)
-
-
-def format_latest(state, clients):
-    recent = state.get("recent", {})
-    blocks = ["🗂 <b>آخر أخبار مصادر العملاء</b>"]
-    if state.get("last_fetch"):
-        blocks[0] += f"\n⏰ آخر فحص: {saudi_time(parse_time(state['last_fetch']))}"
-    for c in clients:
-        # نعرض بس أخبار الحسابات الموجودة حالياً بالقائمة (اللي انشالت ما بتطلع)
-        allowed = {h.lower() for h in c["handles"]}
-        items = [t for t in recent.get(c["name"], [])
-                 if (t["platform"] != "x" or t["label"].lower() in allowed)
-                 and passes_filter(t, c)[0]][:LATEST_PER_CLIENT]
-        lines = [f"\n{c['emoji']} <b>{html.escape(c['name'])}</b>"]
-        if not items:
-            lines.append("ما في أخبار جديدة لسا.")
-        for i, t in enumerate(items, 1):
-            snippet = html.escape(shorten(t["text"].replace("\n", " "), 90))
-            link = html.escape(t["url"], quote=True)
-            lines.append(f'{i}. <a href="{link}">{html.escape(short_label(t))}</a>: {snippet}')
-        blocks.append("\n".join(lines))
-    return "\n".join(blocks)
-
-
-def format_sources(clients, feeds):
-    lines = ["📡 <b>المصادر اللي البوت بيراقبها</b>",
-             f"يفحص X كل {every_text(X_FETCH_EVERY_MINUTES)}، "
-             f"ولينكدإن كل {every_text(LI_FETCH_EVERY_MINUTES)}، "
-             f"ومواقع الأخبار كل {every_text(RSS_FETCH_EVERY_MINUTES)} تقريباً.",
-             "🔎 وبيبعت بس الأخبار اللي بتخص مجال كل عميل."]
-    if feeds:
-        lines.append("\n📰 <b>مواقع الأخبار</b> (لكل العملاء، حسب كلمات كل عميل)")
-        for f in feeds:
-            lines.append(f"• {html.escape(f['name'])}")
-    for c in clients:
-        lines.append(f"\n{c['emoji']} <b>{html.escape(c['name'])}</b>")
-        if c["handles"]:
-            lines.append("X:")
-            for h in c["handles"]:
-                lines.append(f'• <a href="https://x.com/{h}">@{h}</a>')
-        if c["pages"]:
-            lines.append("لينكدإن:")
-            for p in c["pages"]:
-                lines.append(f'• <a href="{html.escape(p["url"], quote=True)}">'
-                             f'{html.escape(p["slug"])}</a>')
-    return "\n".join(lines)
-
-
-def handle_commands(state, clients, feeds, reply_enabled):
-    """يقرأ الرسائل الجديدة ويرد على الأوامر داخل الجروب فقط"""
-    res = telegram("getUpdates", offset=state.get("update_offset", 0), timeout=0,
-                   allowed_updates=["message"])
-    if not res.get("ok"):
-        return
-    for update in res.get("result", []):
-        state["update_offset"] = update["update_id"] + 1
-        msg = update.get("message") or {}
-        if str((msg.get("chat") or {}).get("id")) != CHAT_ID:
-            continue  # تجاهل أي محادثة غير جروب الوكالة
-        text = (msg.get("text") or "").strip()
-        if not text.startswith("/") or not reply_enabled:
-            continue
-        command = text.split()[0].split("@")[0].lower()
-        if command in ("/latest", "/trends", "/start"):
-            send_message(format_latest(state, clients), reply_to=msg.get("message_id"))
-        elif command == "/sources":
-            send_message(format_sources(clients, feeds), reply_to=msg.get("message_id"))
 
 
 # ----------------------------- Apify -----------------------------
@@ -435,122 +328,77 @@ def run_actor(actor, payload, max_charge):
         raise RuntimeError(f"Apify HTTP {e.code}: {body[:300]}")
 
 
-# --- X ---
-def x_query(handles, since):
-    query = "(" + " OR ".join(f"from:{h}" for h in handles) + ")"
-    if not X_INCLUDE_REPLIES:
-        query += " -filter:replies"
-    return query + f" since_time:{int(since.timestamp())}"
+def fetch_trends(cfg):
+    """ترندات X الحالية بالسعودية، مرتبة حسب المركز"""
+    payload = {"locations": [cfg["country"]], "maxTrendsPerLocation": cfg["per_check"],
+               "includeHistory": False}
+    trends = {}
+    for item in run_actor(TRENDS_ACTOR, payload, TRENDS_MAX_CHARGE_USD) or []:
+        if not isinstance(item, dict):
+            continue
+        name = str(item.get("name") or "").strip()
+        key = normalize(name)
+        if not key or key in trends:
+            continue
+        try:
+            rank = int(item.get("rank") or 99)
+        except (TypeError, ValueError):
+            rank = 99
+        trends[key] = {
+            "key": key,
+            "name": name,
+            "rank": rank,
+            "hours": item.get("hoursTrending24h"),
+            "best_rank": item.get("bestRank24h"),
+            "is_new": bool(item.get("isNew")),
+            "url": item.get("searchUrl") or
+                   "https://x.com/search?q=" + urllib.parse.quote(name),
+        }
+    return sorted(trends.values(), key=lambda t: t["rank"])
 
 
-def x_normalize(item, wanted):
-    """يحوّل نتيجة Apify لشكل موحّد، ويرمي البيانات الوهمية والردود"""
-    if not isinstance(item, dict):
-        return None
-    tid = str(item.get("id") or item.get("id_str") or "")
-    if not tid.isdigit() or "mock" in str(item.get("type", "")).lower():
-        return None  # بيانات وهمية بترجع لما ما في نتائج
-    author = item.get("author") or item.get("user") or {}
-    handle = wanted.get((author.get("userName") or author.get("screen_name") or "")
-                        .lstrip("@").lower())
-    if not handle:
-        return None
-    if not X_INCLUDE_REPLIES and (item.get("isReply") or item.get("inReplyToId")):
-        return None
-    if not X_INCLUDE_RETWEETS and (item.get("isRetweet") or item.get("retweeted_tweet")):
-        return None
-    created = parse_any_time(item.get("createdAt") or item.get("created_at"))
-    if not created:
-        return None
-    return {
-        "key": "x:" + tid,
-        "platform": "x",
-        "label": handle,
-        "author_name": (author.get("name") or "").strip(),
-        "text": (item.get("text") or item.get("fullText") or item.get("full_text") or "").strip(),
-        "created_at": created.isoformat(),
-        "url": f"https://x.com/{handle}/status/{tid}",
-    }
+def fetch_top_tweets(trend, blocked):
+    """أبرز التغريدات عن الترند (طلب واحد، بس للترند المهم)"""
+    query = trend["name"] if trend["name"].startswith("#") else f'"{trend["name"]}"'
+    since = int((now_utc() - timedelta(hours=24)).timestamp())
+    payload = {"twitterContent": f"{query} -filter:replies since_time:{since}",
+               "queryType": "Top", "maxItems": 20}
+    tweets = []
+    for item in run_actor(TWEETS_ACTOR, payload, TWEETS_MAX_CHARGE_USD) or []:
+        if not isinstance(item, dict):
+            continue
+        tid = str(item.get("id") or "")
+        if not tid.isdigit() or "mock" in str(item.get("type", "")).lower():
+            continue  # بيانات وهمية بترجع لما ما في نتائج
+        if item.get("isRetweet") or item.get("retweeted_tweet"):
+            continue
+        author = item.get("author") or {}
+        user = (author.get("userName") or "").lstrip("@")
+        text = (item.get("text") or item.get("fullText") or "").strip()
+        if not user or not text:
+            continue
+        if first_match(blocked, normalize(text)):
+            continue  # ما منعرض تغريدة فيها كلمة ممنوعة
+        tweets.append({
+            "user": user,
+            "text": text,
+            "likes": item.get("likeCount") or 0,
+            "url": item.get("url") or f"https://x.com/{user}/status/{tid}",
+        })
+    tweets.sort(key=lambda t: int(t["likes"] or 0), reverse=True)
+    return tweets[:TWEETS_PER_TREND]
 
 
-def fetch_x(clients, since):
-    """طلب واحد لحسابات كل العملاء مع بعض (أرخص من طلب لكل عميل)"""
-    wanted = {}
-    for c in clients:
-        for h in c["handles"]:
-            wanted.setdefault(h.lower(), h)
-    handles = list(wanted.values())
-    found = {}
-    for i in range(0, len(handles), X_HANDLES_PER_QUERY):
-        chunk = handles[i:i + X_HANDLES_PER_QUERY]
-        payload = {"twitterContent": x_query(chunk, since), "queryType": "Latest",
-                   "maxItems": X_MAX_ITEMS_PER_QUERY}
-        for item in run_actor(X_ACTOR, payload, X_MAX_CHARGE_USD) or []:
-            t = x_normalize(item, wanted)
-            if t:
-                found[t["key"]] = t
-    return list(found.values())
-
-
-# --- لينكدإن ---
-def li_normalize(item):
-    if not isinstance(item, dict):
-        return None
-    pid = str(item.get("id") or "")
-    url = item.get("linkedinUrl") or ""
-    text = (item.get("content") or "").strip()
-    if not pid or not url.startswith("https://www.linkedin.com/") or not text:
-        return None
-    if not LI_INCLUDE_REPOSTS and (item.get("repostedBy") or item.get("type") == "repost"):
-        return None
-    posted = item.get("postedAt") or {}
-    created = parse_any_time(posted.get("timestamp") or posted.get("date")) \
-        if isinstance(posted, dict) else parse_any_time(posted)
-    if not created:
-        return None
-    author = item.get("author") or {}
-    return {
-        "key": "li:" + pid,
-        "platform": "li",
-        "label": author.get("universalName") or "",
-        "author_name": (author.get("name") or "").strip(),
-        "text": text,
-        "created_at": created.isoformat(),
-        "url": url,
-    }
-
-
-def fetch_li(clients, since):
-    pages = [p["url"] for c in clients for p in c["pages"]]
-    payload = {
-        "targetUrls": pages,
-        "maxPosts": LI_MAX_POSTS_PER_PAGE,
-        # بس المنشورات بعد آخر فحص (لازم نص، مش رقم)
-        "postedLimitDate": since.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "includeQuotePosts": True,
-        "includeReposts": LI_INCLUDE_REPOSTS,
-        "scrapeReactions": False,   # التفاعلات بتنحسب كل وحدة كأنها منشور
-        "scrapeComments": False,    # نفس الشي للتعليقات
-    }
-    found = {}
-    for item in run_actor(LI_ACTOR, payload, LI_MAX_CHARGE_USD) or []:
-        p = li_normalize(item)
-        if p:
-            found[p["key"]] = p
-    return list(found.values())
-
-
-# --- مواقع الأخبار (RSS) ---
+# ----------------------------- مواقع الأخبار -----------------------------
 def strip_html(text):
     text = re.sub(r"<[^>]+>", " ", text or "")
-    return re.sub(r"[ \t\r\f\v]+", " ", html.unescape(text)).strip()
+    return re.sub(r"\s+", " ", html.unescape(text)).strip()
 
 
 def rss_items_from_xml(raw):
-    """يقرأ عناصر الخبر من ملف RSS. إذا الملف مقطوع أو فيه غلط،
-    بيقرأ الأخبار الكاملة اللي فيه وبيتجاهل الناقص بدل ما يفشل كله"""
+    """يقرأ عناصر الخبر من ملف RSS. إذا الملف مقطوع، بيقرأ الأخبار الكاملة بس"""
     try:
-        return ElementTree.fromstring(raw).iter("item")
+        return list(ElementTree.fromstring(raw).iter("item"))
     except ElementTree.ParseError:
         items = []
         for block in re.findall(rb"<item\b.*?</item>", raw, flags=re.S):
@@ -561,109 +409,389 @@ def rss_items_from_xml(raw):
         return items
 
 
-def fetch_rss(feed):
-    req = urllib.request.Request(feed["url"], headers={"User-Agent": RSS_USER_AGENT})
-    try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            raw = resp.read()
-    except urllib.error.HTTPError as e:
-        raise RuntimeError(f"HTTP {e.code} من {feed['url']}")
-    except Exception as e:
-        raise RuntimeError(f"ما قدرت أوصل {feed['url']}: {type(e).__name__}")
-    found = {}
-    for el in rss_items_from_xml(raw):
-        title = strip_html(el.findtext("title"))
-        link = (el.findtext("link") or "").strip()
-        created = parse_any_time((el.findtext("pubDate") or "").strip())
-        if not title or not link.startswith("http") or not created:
+def fetch_news(feeds):
+    """عناوين آخر كم ساعة من مواقع الأخبار. إذا موقع ما فتح، منكمّل بدونه"""
+    oldest = now_utc() - timedelta(hours=NEWS_HOURS)
+    news = []
+    for feed in feeds:
+        req = urllib.request.Request(feed["url"], headers={"User-Agent": RSS_USER_AGENT})
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                raw = resp.read()
+        except Exception as e:
+            code = f"HTTP {e.code}" if isinstance(e, urllib.error.HTTPError) else type(e).__name__
+            print(f"موقع {feed['name']} ما فتح ({code}): منكمّل بدون أخباره.")
             continue
-        uid = (el.findtext("guid") or "").strip() or link
-        desc = strip_html(el.findtext("description"))
-        text = title if not desc or desc.startswith(title) else f"{title}\n\n{desc}"
-        key = "rss:" + hashlib.sha1(uid.encode("utf-8")).hexdigest()[:16]
-        found[key] = {
-            "key": key,
-            "platform": "rss",
-            "label": feed["name"],
-            "author_name": feed["name"],
-            "text": text,
-            "created_at": created.astimezone(timezone.utc).isoformat(),
-            "url": link,
-        }
-    return list(found.values())
+        count = 0
+        for el in rss_items_from_xml(raw):
+            title = strip_html(el.findtext("title"))
+            link = (el.findtext("link") or "").strip()
+            created = parse_any_time((el.findtext("pubDate") or "").strip())
+            if not title or not link.startswith("http") or not created or created < oldest:
+                continue
+            desc = strip_html(el.findtext("description"))
+            news.append({"source": feed["name"], "title": title, "link": link,
+                         "norm": normalize(title + " " + desc),
+                         "created_at": created.astimezone(timezone.utc).isoformat()})
+            count += 1
+        print(f"موقع {feed['name']}: {count} خبر بآخر {NEWS_HOURS} ساعات.")
+    return news
 
 
-def jobs_for(clients, feeds):
-    """كل "مهمة" إلها وقت آخر فحص خاص فيها:
-    X مهمة وحدة لكل العملاء (طلب واحد)، ولينكدإن مهمة لكل عميل،
-    وكل موقع أخبار مهمة لحاله بتتوزع أخباره على العملاء حسب كلماتهم"""
-    x_clients = [c for c in clients if c["handles"]]
-    if x_clients:
-        yield X_JOB, "x", x_clients, fetch_x
-    for c in clients:
-        if c["pages"]:
-            yield f"{c['name']}|li", "li", [c], fetch_li
-    news_clients = [c for c in clients if c["news_keywords"]]
-    if news_clients:
-        for f in feeds:
-            yield f"rss|{f['name']}", "rss", news_clients, (lambda _c, _s, f=f: fetch_rss(f))
+STOP_WORDS = {"في", "من", "الي", "علي", "عن", "مع", "هذا", "هذه", "التي", "الذي",
+              "او", "ثم", "كل", "بعد", "قبل", "يوم", "اليوم"}
 
 
-def job_title(key, platform):
-    """اسم المهمة برسالة الفشل"""
-    if platform == "rss":
-        return f"موقع {key.split('|', 1)[1]}"
-    who = "كل العملاء" if key == X_JOB else key.split("|")[0]
-    return f"{PLATFORMS[platform]} لـ {who}"
+def related_news(trend, news):
+    """الأخبار اللي بتحكي عن الترند: لازم يكون فيها معظم كلمات اسم الترند"""
+    words = [w for w in normalize(trend["name"]).split()
+             if len(w) >= 3 and w not in STOP_WORDS]
+    if not words:
+        return []
+    cores = [w[2:] if w.startswith("ال") and len(w) > 4 else w for w in words]
+    needed = len(cores) if len(cores) <= 2 else -(-len(cores) * 2 // 3)
+    scored = []
+    for n in news:
+        hits = sum(1 for c in cores if c in n["norm"])
+        if hits >= needed and (len(cores) > 1 or len(cores[0]) >= 4):
+            scored.append((hits, n["created_at"], n))
+    scored.sort(key=lambda s: (s[0], s[1]), reverse=True)
+    return [s[2] for s in scored[:NEWS_PER_TREND]]
 
 
-def baseline_key(client, key, platform):
-    """مفتاح «أول فحص بصمت» لكل عميل بكل مصدر"""
-    return f"{client['name']}|{key}" if platform == "rss" else f"{client['name']}|{platform}"
+# ----------------------------- العقل: الحكم على الترند -----------------------------
+def prefilter(trend, cfg):
+    """قبل أي حكم: الكلمات الممنوعة والرياضة والترفيه والإعلانات بتطلع فوراً"""
+    text = trend["context_norm"]
+    if first_match(cfg["blocked"], text):
+        return "كلمة ممنوعة"
+    word = first_match(cfg["ignore"], normalize(trend["name"]))
+    if word:
+        return f"ترند مستبعد («{word}»)"
+    return None
+
+
+def keyword_judge(candidates, cfg):
+    """العقل المؤقت: بيدوّر على كلمات العملاء والكلمات الوطنية
+    باسم الترند وبعناوين الأخبار اللي بتحكي عنه"""
+    decisions = {}
+    for t in candidates:
+        name_norm = normalize(t["name"])
+        whom, why = [], []
+        for c in cfg["clients"]:
+            word = first_match(c["words"], name_norm)
+            where = "باسم الترند"
+            if not word:
+                word = first_match(c["words"], t["context_norm"])
+                where = "بخبر عنه"
+            if word:
+                whom.append(c["name"])
+                why.append(f"«{word}» {where} ← {c['name']}")
+        word = first_match(cfg["national"], name_norm)
+        where = "باسم الترند"
+        if not word:
+            word = first_match(cfg["national"], t["context_norm"])
+            where = "بخبر عنه"
+        if word:
+            whom.append(NATIONAL)
+            why.append(f"«{word}» {where} ← ترند وطني")
+        if whom:
+            decisions[t["key"]] = {"for": whom, "why": "لقيت " + "، و".join(why)}
+    return decisions
+
+
+AI_SYSTEM = """انت محرر محتوى بوكالة «عبسان»، وكالة بتبني الحضور المهني لقيادات سعودية على لينكدإن وX.
+مهمتك: تقرر لكل ترند من ترندات X بالسعودية إذا هو فرصة حقيقية إنه واحد من عملاء الوكالة يكتب عنه بوست مهني الآن، أو إذا هو ترند وطني سعودي مهم.
+
+عملاء الوكالة:
+{clients}
+
+«ترند وطني» يعني: حدث وطني كبير بيهم السعودية كلها، متل قرار حكومي مهم، إنجاز للمملكة، رؤية 2030 ومشاريعها، القيادة وولي العهد، أمن الوطن والدفاع عنه، مناسبة وطنية. عملاء الوكالة بيحبوا يشاركوا الفخر الوطني وقوة الوطن.
+
+القواعد:
+- اختار بس الترندات المهمة فعلاً. الأغلبية بتكون مش مهمة، وهاد طبيعي.
+- مش مهم: الرياضة والأندية، الترفيه والمسلسلات والحفلات، الإعلانات والعروض والمسابقات التجارية، الهاشتاقات الاجتماعية العامة (متل «انشر تغريدة عن…»)، الأخبار الشخصية والفضائح.
+- مش مهم أبداً: أي شي غير لائق أو فيه إيحاء، أو جدل ديني أو أخلاقي.
+- إذا ما في خبر بيوضّح سبب الترند واسمه مش واضح، احكم بحذر، ولا تختاره إلا إذا اسمه بيدل بوضوح على حدث وطني أو على مجال عميل.
+- "for": أسماء العملاء بالضبط زي ما هي مكتوبة فوق، و/أو "{national}". فاضية إذا مش مهم.
+- "why": إذا مهم، جملة وحدة قصيرة بالعربي: ليش بيهم، ومن أي زاوية ممكن العميل يكتب. إذا مش مهم، اكتب السبب بكلمتين.
+
+رد بـ JSON بس، بدون أي كلام قبله أو بعده، بهالشكل:
+[{{"id": 1, "relevant": true, "for": ["..."], "why": "..."}}]
+لازم يكون في عنصر لكل ترند."""
+
+
+def ai_judge(candidates, cfg):
+    """العقل الذكي: نموذج Claude بيقرأ الترندات والأخبار عنها وبيحكم.
+    بيرمي خطأ إذا ما زبط، والبوت بيرجع للكلمات"""
+    clients_text = "\n".join(f"- {c['name']}: {c['about'] or '، '.join(c['raw_words'])}"
+                             for c in cfg["clients"])
+    system = AI_SYSTEM.format(clients=clients_text, national=NATIONAL)
+    lines = []
+    for i, t in enumerate(candidates, 1):
+        info = [f"المركز {t['rank']}"]
+        if hours_text(t.get("hours")):
+            info.append(hours_text(t["hours"]))
+        if t["is_new"]:
+            info.append("جديد")
+        lines.append(f"{i}. {t['name']} ({'، '.join(info)})")
+        for n in t["news"]:
+            lines.append(f"   خبر من {n['source']}: {n['title']}")
+        if not t["news"]:
+            lines.append("   ما لقيت خبر عنه")
+    body = json.dumps({
+        "model": AI_MODEL,
+        "max_tokens": AI_MAX_TOKENS,
+        "system": system,
+        "messages": [{"role": "user", "content": "ترندات السعودية الجديدة:\n" + "\n".join(lines)}],
+    }).encode("utf-8")
+    req = urllib.request.Request("https://api.anthropic.com/v1/messages", data=body, headers={
+        "x-api-key": AI_KEY,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=90) as resp:
+            reply = json.load(resp)
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"Claude HTTP {e.code}: {e.read().decode('utf-8', 'replace')[:300]}")
+    text = "".join(b.get("text", "") for b in reply.get("content") or [] if b.get("type") == "text")
+    start, end = text.find("["), text.rfind("]")
+    if start < 0 or end < start:
+        raise RuntimeError(f"رد Claude مش JSON: {text[:200]!r}")
+    items = json.loads(text[start:end + 1])
+    allowed = {c["name"] for c in cfg["clients"]} | {NATIONAL}
+    decisions = {}
+    for item in items:
+        try:
+            t = candidates[int(item.get("id")) - 1]
+        except (TypeError, ValueError, IndexError):
+            continue
+        whom = [w for w in item.get("for") or [] if w in allowed]
+        if item.get("relevant") and whom:
+            decisions[t["key"]] = {"for": whom, "why": str(item.get("why") or "").strip()}
+        else:
+            print(f"  ⛔ {t['name']}: {shorten(str(item.get('why') or 'مش مهم'), 80)}")
+    usage = reply.get("usage") or {}
+    print(f"Claude: {usage.get('input_tokens', '?')} داخل، {usage.get('output_tokens', '?')} طالع.")
+    return decisions
+
+
+def judge(candidates, cfg):
+    """يرجع (القرارات، اسم العقل اللي حكم)"""
+    if not candidates:
+        return {}, "ai" if AI_KEY else "kw"
+    if AI_KEY:
+        try:
+            return ai_judge(candidates, cfg), "ai"
+        except Exception as e:
+            print(f"الذكاء الاصطناعي ما زبط ({e}): رجعت للكلمات.")
+            return keyword_judge(candidates, cfg), "kw-fallback"
+    return keyword_judge(candidates, cfg), "kw"
+
+
+BRAIN_NAMES = {"ai": "ذكاء اصطناعي", "kw": "كلمات",
+               "kw-fallback": "كلمات (الذكاء الاصطناعي ما رد)"}
+
+
+# ----------------------------- الرسائل -----------------------------
+def whom_text(whom, cfg):
+    emojis = {c["name"]: c["emoji"] for c in cfg["clients"]}
+    parts = []
+    for w in whom:
+        parts.append("🇸🇦 ترند وطني" if w == NATIONAL else f"{emojis.get(w, '📰')} {w}")
+    return " · ".join(html.escape(p) for p in parts)
+
+
+def format_alert(trend, decision, tweets, cfg):
+    stats = [f"المركز {trend['rank']} بالسعودية"]
+    if hours_text(trend.get("hours")):
+        stats.append(hours_text(trend["hours"]))
+    if trend["is_new"]:
+        stats.append("🆕 جديد")
+    lines = [
+        "🔥 <b>ترند مهم لعملاء عبسان</b>",
+        whom_text(decision["for"], cfg),
+        "",
+        f"<b>{html.escape(trend['name'])}</b>",
+        "📊 " + " · ".join(stats),
+    ]
+    if decision.get("why"):
+        lines += ["", f"💡 <b>ليش:</b> {html.escape(decision['why'])}"]
+    if trend["news"]:
+        lines += ["", "📰 <b>شو صاير:</b>"]
+        for n in trend["news"]:
+            lines.append(f'• <a href="{html.escape(n["link"], quote=True)}">'
+                         f'{html.escape(n["title"])}</a> ({html.escape(n["source"])})')
+    if tweets:
+        lines += ["", "🗣 <b>أبرز التغريدات:</b>"]
+        for i, tw in enumerate(tweets, 1):
+            likes = compact_number(tw["likes"])
+            lines.append(f'{i}. <a href="{html.escape(tw["url"], quote=True)}">'
+                         f'@{html.escape(tw["user"])}</a>: {html.escape(shorten(tw["text"]))}'
+                         + (f" (❤️ {likes})" if likes and likes != "0" else ""))
+    lines += ["", f'🔍 <a href="{html.escape(trend["url"], quote=True)}">'
+                  f'شوف كل التغريدات عن الترند</a>']
+    return "\n".join(lines)
+
+
+def format_check_note(trends_count, brain):
+    return (f"✅ فحص {saudi_time()} · شفت {trends_count} ترند · "
+            f"ما في ترند جديد بيخص عملاء عبسان\n🧠 الحكم: {BRAIN_NAMES.get(brain, brain)}")
+
+
+def format_latest(state, cfg):
+    items = state.get("recent_trends", [])[:LATEST_COUNT]
+    lines = ["🗂 <b>آخر الترندات المهمة</b>"]
+    if state.get("last_check"):
+        lines[0] += f"\n⏰ آخر فحص: {saudi_time(parse_time(state['last_check']))}"
+    if not items:
+        lines.append("\nلسا ما في ترندات مهمة.")
+    for i, t in enumerate(items, 1):
+        lines.append(f'\n{i}. <a href="{html.escape(t["url"], quote=True)}">'
+                     f'{html.escape(t["name"])}</a>: {whom_text(t["for"], cfg)}'
+                     f"\n⏰ {saudi_time(parse_time(t['sent_at']), with_date=True)}")
+        if t.get("why"):
+            lines.append("💡 " + html.escape(shorten(t["why"], 150)))
+    return "\n".join(lines)
+
+
+def format_sources(cfg):
+    lines = ["📡 <b>شو البوت بيراقب</b>",
+             f"كل ساعة بيشوف أعلى {cfg['per_check']} ترند على X بالسعودية، "
+             "وبيبعت بس الترند اللي بيهم عملاء عبسان أو الترند الوطني المهم.",
+             f"🧠 الحكم: {'ذكاء اصطناعي' if AI_KEY else 'كلمات'}"]
+    if cfg["feeds"]:
+        lines.append("📰 سياق الترند من: " + "، ".join(html.escape(f["name"]) for f in cfg["feeds"]))
+    for c in cfg["clients"]:
+        lines.append(f"\n{c['emoji']} <b>{html.escape(c['name'])}</b>")
+        lines.append(html.escape("، ".join(c["raw_words"])) or "ما في كلمات")
+    lines.append("\n🇸🇦 <b>ترند وطني</b>")
+    lines.append(html.escape("، ".join(cfg["raw_national"])) or "ما في كلمات")
+    return "\n".join(lines)
+
+
+def handle_commands(state, cfg, reply_enabled):
+    """يقرأ الرسائل الجديدة ويرد على الأوامر داخل الجروب فقط"""
+    res = telegram("getUpdates", offset=state.get("update_offset", 0), timeout=0,
+                   allowed_updates=["message"])
+    if not res.get("ok"):
+        return
+    for update in res.get("result", []):
+        state["update_offset"] = update["update_id"] + 1
+        msg = update.get("message") or {}
+        if str((msg.get("chat") or {}).get("id")) != CHAT_ID:
+            continue  # تجاهل أي محادثة غير جروب الوكالة
+        text = (msg.get("text") or "").strip()
+        if not text.startswith("/") or not reply_enabled:
+            continue
+        command = text.split()[0].split("@")[0].lower()
+        if command in ("/latest", "/trends", "/start"):
+            send_message(format_latest(state, cfg), reply_to=msg.get("message_id"))
+        elif command == "/sources":
+            send_message(format_sources(cfg), reply_to=msg.get("message_id"))
+
+
+# ----------------------------- الفحص -----------------------------
+def context_hash(trend):
+    links = sorted(n["link"] for n in trend["news"])
+    return hashlib.sha1("|".join(links).encode("utf-8")).hexdigest()[:12]
+
+
+def check_trends(state, cfg, now):
+    """فحص واحد: يجيب الترندات، يحكم على الجديد، ويبعت المهم"""
+    trends = fetch_trends(cfg)
+    news = fetch_news(cfg["feeds"])
+    judged = state.setdefault("judged", {})
+    brain_now = "ai" if AI_KEY else "kw"
+
+    candidates = []
+    for t in trends:
+        t["news"] = related_news(t, news)
+        t["context_norm"] = normalize(t["name"] + " " + " ".join(n["norm"] for n in t["news"]))
+        old = judged.get(t["key"]) or {}
+        if old.get("sent"):
+            continue  # انبعت قبل: ما منعيده
+        ctx = context_hash(t)
+        # ما منعيد الحكم إلا إذا: انضاف خبر جديد عنه، أو تعدّلت القوائم،
+        # أو تغيّر العقل (يوم ما يشتغل الذكاء الاصطناعي)
+        if (old and old.get("ctx") == ctx and old.get("rules") == cfg["rules"]
+                and old.get("brain") == brain_now):
+            continue
+        reason = prefilter(t, cfg)
+        judged[t["key"]] = {"at": now.isoformat(), "sent": False, "ctx": ctx,
+                            "rules": cfg["rules"], "brain": brain_now, "name": t["name"]}
+        if reason:
+            print(f"  ⛔ {t['name']}: {reason}")
+            continue
+        candidates.append(t)
+
+    decisions, brain = judge(candidates, cfg)
+    if brain == "kw-fallback":
+        for t in candidates:  # الذكاء الاصطناعي ما رد: منخليه يحكم عليهم بالفحص الجاي
+            judged[t["key"]]["brain"] = "kw"
+    print(f"شفت {len(trends)} ترند، حكمت على {len(candidates)} جديد ({BRAIN_NAMES.get(brain, brain)})، "
+          f"المهم: {len(decisions)}.")
+
+    sent, lookups = 0, 0
+    for t in candidates:
+        d = decisions.get(t["key"])
+        if not d:
+            if brain != "ai":
+                print(f"  ⛔ {t['name']}: ما إله علاقة بالعملاء")
+            continue
+        if sent >= MAX_ALERTS_PER_CHECK:
+            print(f"  ⏸ {t['name']}: وصلنا سقف {MAX_ALERTS_PER_CHECK} ترندات بهالفحص، بيضل للفحص الجاي.")
+            judged.pop(t["key"], None)
+            continue
+        tweets = []
+        if lookups < MAX_TWEET_LOOKUPS_PER_CHECK:
+            lookups += 1
+            try:
+                tweets = fetch_top_tweets(t, cfg["blocked"])
+            except Exception as e:
+                print(f"  ما قدرت أجيب تغريدات {t['name']}: {e}")
+        if send_message(format_alert(t, d, tweets, cfg)):
+            sent += 1
+            judged[t["key"]]["sent"] = True
+            print(f"  ✅ {t['name']}: {' + '.join(d['for'])} · {shorten(d['why'], 80)}")
+            recent = state.setdefault("recent_trends", [])
+            recent.insert(0, {"name": t["name"], "url": t["url"], "for": d["for"],
+                              "why": d["why"], "sent_at": now.isoformat()})
+            del recent[LATEST_COUNT:]
+        else:
+            judged.pop(t["key"], None)  # ما انبعت: منرجع نجرّبه بالفحص الجاي
+        time.sleep(1)
+
+    if sent == 0 and SILENT_CHECK_MESSAGE:
+        send_message(format_check_note(len(trends), brain), silent=True)
+    print(f"Sent {sent} trend alerts.")
+
+    # ننسى الترندات القديمة حتى ما يكبر الملف
+    oldest = now - timedelta(days=JUDGED_MEMORY_DAYS)
+    for k in [k for k, v in judged.items() if (parse_time(v.get("at")) or now) < oldest]:
+        judged.pop(k)
 
 
 # ----------------------------- التشغيل -----------------------------
+ANNOUNCEMENT = (
+    "✅ <b>تحديث بوت عبسان: صار رادار ترندات</b>\n"
+    "ما عاد يبعت كل منشور من الجهات. كل ساعة بيشوف ترندات X بالسعودية، "
+    "وبيبعت بس الترند اللي بيهم عملاء عبسان أو الترند الوطني المهم 🔔.\n"
+    "ولما ما يلاقي شي، بيبعت رسالة صامتة 🔕 حتى تعرفوا إنه شغّال.\n\n"
+    "• /latest آخر الترندات المهمة\n"
+    "• /sources شو البوت بيراقب"
+)
+
+
 def migrate(state):
     """يرجع (state, رسالة التحديث أو None)"""
-    version = state.get("version")
-    if version == STATE_VERSION:
+    if state.get("version") == STATE_VERSION:
         return state, None
-    if version == 2:  # كان يراقب X بس: نحتفظ بذاكرته ونضيف لينكدإن
-        state["version"] = STATE_VERSION
-        state.setdefault("baselined", [])
-        state.setdefault("last_ok", {})
-        # نحوّل الذاكرة القديمة للشكل الجديد
-        state["seen"] = {(k if ":" in k else "x:" + k): v
-                         for k, v in state.get("seen", {}).items()}
-        for name, items in state.get("recent", {}).items():
-            state["recent"][name] = [
-                {"key": "x:" + t["id"], "platform": "x", "label": t["handle"],
-                 "author_name": t.get("author_name", ""), "text": t.get("text", ""),
-                 "created_at": t["created_at"], "url": t["url"]}
-                if "platform" not in t else t
-                for t in items if "platform" in t or ("id" in t and "handle" in t)]
-        return state, "✅ <b>تحديث بوت عبسان: صار يراقب صفحات لينكدإن كمان</b>\n\n"
-    # نسخة قديمة جداً (الترندات العامة): نبلّش ذاكرة جديدة ونحتفظ بس بمكان قراءة الأوامر
+    # النسخ القديمة (مصادر العملاء): منبلّش ذاكرة جديدة ومنحتفظ بس بمكان قراءة الأوامر
     return ({"version": STATE_VERSION, "update_offset": state.get("update_offset", 0),
-             "baselined": [], "last_ok": {}},
-            "✅ <b>تحديث بوت عبسان: صار يراقب مصادر العملاء</b>\n"
-            "بدل الترندات العامة، رح أبعتلكم كل منشور جديد من الجهات اللي حددها كل عميل، "
-            "أول ما ينزل.\n\n")
-
-
-def merge_x_jobs(state, clients):
-    """قبل: X كان مهمة لكل عميل. هلأ: مهمة وحدة للكل.
-    منبلّش المهمة الجديدة من أقدم فحص ناجح، حتى ما يفوتنا شي وما نعيد إرسال شي"""
-    last_ok = state["last_ok"]
-    old_keys = [k for k in last_ok if k.endswith("|x") and k != X_JOB]
-    if X_JOB not in last_ok:
-        times = [parse_time(last_ok[k]) for k in old_keys]
-        times = [t for t in times if t]
-        if times:
-            last_ok[X_JOB] = min(times).isoformat()
-    for k in old_keys:
-        last_ok.pop(k, None)
-        state.get("fail_streaks", {}).pop(k, None)
+             "judged": {}, "recent_trends": [], "last_ok": None},
+            ANNOUNCEMENT)
 
 
 def main():
@@ -673,141 +801,40 @@ def main():
     if missing:
         sys.exit("Missing secrets: " + ", ".join(missing))
 
-    clients, feeds = load_sources()
-    old_version = load_json(STATE_FILE, {}).get("version")
-    state, announcement = migrate(load_json(STATE_FILE, {}))
-    state.setdefault("baselined", [])
-    state.setdefault("last_ok", {})
-    fresh_start = old_version not in (2, STATE_VERSION)  # ذاكرة جديدة كلياً
+    cfg = load_sources()
+    old_state = load_json(STATE_FILE, {})
+    fresh_start = not old_state  # ما في ذاكرة أبداً: منتجاهل الأوامر القديمة
+    state, announcement = migrate(old_state)
     now = now_utc()
+    print(f"🧠 العقل: {'ذكاء اصطناعي (' + AI_MODEL + ')' if AI_KEY else 'كلمات'}")
 
-    # النسخة 2 كانت مخلصة الفحص الأول لـ X، فما بدنا نعيده
-    if old_version == 2:
-        for c in clients:
-            key = f"{c['name']}|x"
-            if c["handles"] and key not in state["baselined"]:
-                state["baselined"].append(key)
-                if state.get("last_fetch"):
-                    state["last_ok"].setdefault(key, state["last_fetch"])
-    merge_x_jobs(state, clients)
+    if announcement:
+        send_message(announcement)
+        telegram("setMyCommands", commands=[
+            {"command": "latest", "description": "آخر الترندات المهمة"},
+            {"command": "sources", "description": "شو البوت بيراقب"},
+        ])
 
-    next_fetch = parse_time(state.get("next_fetch"))
-    if announcement or next_fetch is None or now >= next_fetch:
-        seen = {k: v for k, v in state.get("seen", {}).items()
-                if (parse_time(v) or now) > now - timedelta(days=3)}
-        recent = state.get("recent", {})
-        oldest_allowed = now - timedelta(hours=MAX_AGE_HOURS)
+    last_ok = parse_time(state.get("last_ok"))
+    retry_at = parse_time(state.get("retry_at"))
+    due = last_ok is None or now - last_ok >= timedelta(minutes=TRENDS_EVERY_MINUTES - 5)
+    if due and (retry_at is None or now >= retry_at):
+        try:
+            check_trends(state, cfg, now)
+            state["last_ok"] = state["last_check"] = now.isoformat()
+            state.pop("retry_at", None)
+            state["fail_streak"] = 0
+        except Exception as e:
+            print(f"فحص الترندات failed: {e}")
+            state["retry_at"] = (now + timedelta(minutes=RETRY_AFTER_FAIL_MINUTES)).isoformat()
+            state["fail_streak"] = state.get("fail_streak", 0) + 1
+            if state["fail_streak"] == 3:
+                send_message("⚠️ <b>البوت ما قدر يجيب ترندات السعودية من 3 محاولات متتالية.</b>\n"
+                             "افحصوا تبويب Actions على GitHub، ورصيد Apify كمان.")
+    else:
+        print("لسا ما إجا وقت الفحص.")
 
-        jobs = list(jobs_for(clients, feeds))
-        retry_at = state.setdefault("retry_at", {})
-        failed, alerts = [], []
-        for key, platform, job_clients, fetch in jobs:
-            last_ok = parse_time(state["last_ok"].get(key))
-            # كل منصة إلها وتيرة، وبإعادة المحاولة منعيد بس اللي فشل
-            if last_ok and now - last_ok < timedelta(minutes=FETCH_EVERY[platform] - 5):
-                continue
-            # اللي فشل بيستنى 20 دقيقة قبل ما نعيده (حتى ما يصرف رصيد على الفاضي)
-            wait_until = parse_time(retry_at.get(key))
-            if wait_until and now < wait_until:
-                continue
-            since = max(last_ok - timedelta(minutes=OVERLAP_MINUTES), oldest_allowed) \
-                if last_ok else oldest_allowed
-            try:
-                items = fetch(job_clients, since)
-            except Exception as e:
-                print(f"{job_title(key, platform)} failed: {e}")
-                failed.append(key)
-                retry_at[key] = (now + timedelta(minutes=RETRY_AFTER_FAIL_MINUTES)).isoformat()
-                continue
-            retry_at.pop(key, None)
-            new_keys = set()
-            for c in job_clients:
-                # نوزّع النتائج على أصحابها: تغريدات X حسب الحساب
-                mine_handles = {h.lower() for h in c["handles"]}
-                mine = [t for t in items
-                        if platform != "x" or t["label"].lower() in mine_handles]
-                fresh = [t for t in mine if t["key"] not in seen
-                         and parse_time(t["created_at"]) >= oldest_allowed]
-                bkey = baseline_key(c, key, platform)
-                first_time = bkey not in state["baselined"]
-                passed = []
-                for t in fresh:
-                    new_keys.add(t["key"])
-                    ok, why = passes_filter(t, c)
-                    if not ok:
-                        if platform != "rss":  # مواقع الأخبار معظمها بينفلتر، فما منطوّل السجل فيها
-                            print(f"  filtered ({why}): {short_label(t)}: "
-                                  f"{shorten(t['text'].replace(chr(10), ' '), 60)}")
-                        continue
-                    passed.append(t)
-                    if not first_time:
-                        alerts.append((t, c))
-                where = job_title(key, platform) if platform == "rss" else PLATFORMS[platform]
-                print(f"{c['name']} / {where}: {len(mine)} items, {len(fresh)} new, "
-                      f"{len(fresh) - len(passed)} filtered"
-                      + (" (first check: saved silently)" if first_time else "") + ".")
-                if first_time:
-                    state["baselined"].append(bkey)
-                keep = {t["key"]: t for t in passed + recent.get(c["name"], [])}
-                recent[c["name"]] = sorted(keep.values(), key=lambda t: t["created_at"],
-                                           reverse=True)[:LATEST_PER_CLIENT]
-            for k in new_keys:
-                seen[k] = now.isoformat()
-            state["last_ok"][key] = now.isoformat()
-
-        if announcement:
-            send_message(announcement + "• /latest آخر الأخبار المحفوظة لكل عميل\n"
-                                        "• /sources المصادر اللي براقبها\n\n"
-                         + format_sources(clients, feeds))
-        alerts.sort(key=lambda a: a[0]["created_at"])
-        sent = 0
-        for t, c in alerts[-MAX_ALERTS_PER_RUN:]:
-            if send_message(format_alert(t, c)):
-                sent += 1
-            time.sleep(1)
-        print(f"Sent {sent} alerts ({len(alerts)} new).")
-
-        state.update({"seen": seen, "recent": recent})
-        # عدّاد فشل لكل مهمة لحالها، وتنبيه وحيد إذا فشلت 3 مرات ورا بعض
-        streaks = state.setdefault("fail_streaks", {})
-        state.pop("fail_streak", None)
-        for key, platform, _, _ in jobs:
-            if key in failed:
-                streaks[key] = streaks.get(key, 0) + 1
-                if streaks[key] == 3:
-                    hint = ("ممكن الموقع غيّر رابط الأخبار أو حجب البوت."
-                            if platform == "rss" else "افحصوا رصيد Apify كمان.")
-                    send_message(f"⚠️ <b>البوت ما قدر يجيب أخبار "
-                                 f"{html.escape(job_title(key, platform))} "
-                                 f"من 3 محاولات متتالية.</b>\n"
-                                 f"افحصوا تبويب Actions على GitHub. {hint}")
-            elif state["last_ok"].get(key) == now.isoformat():
-                streaks.pop(key, None)
-        if len(failed) < len(jobs):
-            state["last_fetch"] = now.isoformat()
-        # الفحص الجاي: أول مهمة بيصير دورها (واللي فشل: بعد 20 دقيقة من فشله)
-        live = {key for key, _, _, _ in jobs}
-        for k in list(retry_at):
-            if k not in live:
-                retry_at.pop(k)  # مصدر انشال من القائمة
-        due = []
-        for key, platform, _, _ in jobs:
-            if retry_at.get(key):
-                due.append(parse_time(retry_at[key]))
-            elif state["last_ok"].get(key):
-                due.append(parse_time(state["last_ok"][key])
-                           + timedelta(minutes=FETCH_EVERY[platform]))
-        state["next_fetch"] = (min(due) if due else now + timedelta(
-            minutes=RETRY_AFTER_FAIL_MINUTES)).isoformat()
-
-        if announcement:
-            telegram("setMyCommands", commands=[
-                {"command": "latest", "description": "آخر أخبار مصادر العملاء"},
-                {"command": "sources", "description": "المصادر اللي البوت بيراقبها"},
-            ])
-
-    # بذاكرة جديدة كلياً منتجاهل الأوامر القديمة
-    handle_commands(state, clients, feeds, reply_enabled=not fresh_start)
+    handle_commands(state, cfg, reply_enabled=not fresh_start)
     save_state(state)
 
 
