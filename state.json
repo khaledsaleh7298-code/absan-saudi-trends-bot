@@ -185,10 +185,105 @@
     "x:2112854483608686768": "2026-10-21T10:45:15.544277+00:00",
     "x:2112846354464805258": "2026-10-21T10:45:15.544277+00:00",
     "li:7518609894695206912": "2026-10-21T10:45:15.544277+00:00",
-    "li:7518612209258754048": "2026-10-21T10:45:15.544277+00:00"
+    "li:7518612209258754048": "2026-10-21T10:45:15.544277+00:00",
+    "rss:4188317ae262d333": "2026-10-21T13:21:31.037926+00:00",
+    "rss:aaa415d9099c0370": "2026-10-21T13:21:31.037926+00:00",
+    "rss:3e7f3b02803c69bf": "2026-10-21T13:21:31.037926+00:00",
+    "rss:2ca1c1902dcc3ef7": "2026-10-21T13:21:31.037926+00:00",
+    "rss:d2db8fc35e0cfa09": "2026-10-21T13:21:31.037926+00:00",
+    "rss:ac2b315019a5a2dc": "2026-10-21T13:21:31.037926+00:00",
+    "rss:42e75bd8e2333ee1": "2026-10-21T13:21:31.037926+00:00",
+    "rss:5a3977ec1abd04ab": "2026-10-21T13:21:31.037926+00:00",
+    "rss:0275cbca4f03019d": "2026-10-21T13:21:31.037926+00:00",
+    "rss:3fb02d967476b251": "2026-10-21T13:21:31.037926+00:00",
+    "rss:7883b126001a4635": "2026-10-21T13:21:31.037926+00:00",
+    "rss:67a3c512585fb4eb": "2026-10-21T13:21:31.037926+00:00",
+    "rss:eb68295779b38a4a": "2026-10-21T13:21:31.037926+00:00",
+    "rss:e4bf132a92fa2b72": "2026-10-21T13:21:31.037926+00:00",
+    "rss:6673516427c15b17": "2026-10-21T13:21:31.037926+00:00",
+    "rss:eadcc87628fcd5c1": "2026-10-21T13:21:31.037926+00:00",
+    "rss:cee7bb68696afc9a": "2026-10-21T13:21:31.037926+00:00",
+    "rss:94f7fa75a11ea636": "2026-10-21T13:21:31.037926+00:00",
+    "rss:0e4c6f41ebda50f8": "2026-10-21T13:21:31.037926+00:00",
+    "rss:3ddf2203b75377a0": "2026-10-21T13:21:31.037926+00:00",
+    "rss:859e048c24ab69ba": "2026-10-21T13:21:31.037926+00:00",
+    "rss:ade7097342616719": "2026-10-21T13:21:31.037926+00:00",
+    "rss:e48c9846b37e57da": "2026-10-21T13:21:31.037926+00:00",
+    "rss:b478f3a1b1b62b03": "2026-10-21T13:21:31.037926+00:00",
+    "rss:4307b2c8d56533b9": "2026-10-21T13:21:31.037926+00:00",
+    "rss:ba160773872b2c00": "2026-10-21T13:21:31.037926+00:00",
+    "rss:37d23eb36c5889e6": "2026-10-21T13:21:31.037926+00:00",
+    "rss:84206ef8b55d36cc": "2026-10-21T13:21:31.037926+00:00",
+    "rss:7db614993c99dbe1": "2026-10-21T13:21:31.037926+00:00",
+    "rss:3c2b81c877a91531": "2026-10-21T13:21:31.037926+00:00",
+    "rss:1b2623bde099a944": "2026-10-21T13:21:31.037926+00:00",
+    "rss:be69385b0ac4eab9": "2026-10-21T13:21:31.037926+00:00",
+    "rss:bf952956567c7a82": "2026-10-21T13:21:31.037926+00:00",
+    "rss:357425bf8eac9b15": "2026-10-21T13:21:31.037926+00:00",
+    "rss:35cc07a12b558c93": "2026-10-21T13:21:31.037926+00:00",
+    "rss:1728a646903edf93": "2026-10-21T13:21:31.037926+00:00",
+    "rss:db3520a1e19b22c3": "2026-10-21T13:21:31.037926+00:00",
+    "rss:5b1dd56d52649b0c": "2026-10-21T13:21:31.037926+00:00",
+    "rss:4136ffb9e82523de": "2026-10-21T13:21:31.037926+00:00",
+    "rss:a3381d89227036f7": "2026-10-21T13:21:31.037926+00:00",
+    "rss:de0b74da33c18354": "2026-10-21T13:21:31.037926+00:00",
+    "rss:ba0e83917ec4e260": "2026-10-21T13:21:31.037926+00:00",
+    "rss:a30d20aa57f36ee2": "2026-10-21T13:21:31.037926+00:00",
+    "rss:e4cdb45a9292e7dd": "2026-10-21T13:21:31.037926+00:00",
+    "rss:97cc87ccd0d4eead": "2026-10-21T13:21:31.037926+00:00",
+    "rss:5b9f620bc42f1587": "2026-10-21T13:21:31.037926+00:00",
+    "rss:50cc90f62a37fa6f": "2026-10-21T13:21:31.037926+00:00",
+    "rss:b36a8ebf572310ba": "2026-10-21T13:21:31.037926+00:00",
+    "rss:9148bd6cc00c2e20": "2026-10-21T13:21:31.037926+00:00",
+    "rss:adaec6abb6aedddb": "2026-10-21T13:21:31.037926+00:00"
   },
   "recent": {
     "أحمد المنصور": [
+      {
+        "key": "rss:1b2623bde099a944",
+        "platform": "rss",
+        "label": "سبق",
+        "author_name": "سبق",
+        "text": "جامعة الأعمال والتكنولوجيا تُشكّل لجنة لحصر أضرار انهيار خزان مياه بجدة\n\nطمأن رئيس مجلس الأمناء بجامعة الأعمال والتكنولوجيا المتضررين من حادث انهيار خزان مياه مجاور لمقر الجامعة، مؤكداً أولوية سلامة الطلاب والمنسوبين والعمل على تعويض أصحاب المركبات عبر شركات التأمين والجهات المختصة، مع تشكيل لجنة لحصر الأضرار وتكليف الإدارة القانونية بمتابعة الإجراءات النظامية اللازمة.",
+        "created_at": "2026-10-21T12:24:30+00:00",
+        "url": "https://sabq.org/article/جامعة-الأعمال-والتكنولوجيا-تُشكّل-لجنة-لحصر-أضرار-انهيار-خزان-مياه-بجدة"
+      },
+      {
+        "key": "rss:bf952956567c7a82",
+        "platform": "rss",
+        "label": "سبق",
+        "author_name": "سبق",
+        "text": "هيئة الطرق تكشف متطلبات تصميم قنوات الصرف لحماية الطرق من الفيضانات\n\nأوضحت الهيئة العامة للطرق أن كود الطرق السعودي يحدد متطلبات تصميم قنوات الصرف على جوانب الطرق لجمع مياه الأمطار وتصريفها ذاتيًا، مع مراعاة مخاطر الفيضانات السنوية، بما يحمي الطرق والممتلكات ويعزز السلامة. ويعد الكود مرجعًا فنيًا موحدًا لجهات قطاع الطرق بمختلف مراحله.",
+        "created_at": "2026-10-21T12:18:52+00:00",
+        "url": "https://sabq.org/article/هيئة-الطرق-تكشف-متطلبات-تصميم-قنوات-الصرف-لحماية-الطرق-من-الفيضانات"
+      },
+      {
+        "key": "rss:ade7097342616719",
+        "platform": "rss",
+        "label": "سبق",
+        "author_name": "سبق",
+        "text": "جامعة جازان تُقيم ورشة عمل ودورة تدريبية في الأمن السيبراني لمنسوبي الجهات الحكومية\n\nنظّمت جامعة جازان، ممثلة بإدارة الأمن السيبراني، ورشة عمل عن الإدارة والالتزام في الأمن السيبراني، ودورة تدريبية متقدمة حول استراتيجيات الهجوم وآليات الحماية في بيئات العمل، موجهة لمسؤولي التقنية بالجهات الحكومية في المنطقة، ضمن فعاليات شهر التوعية بالأمن السيبراني لتعزيز الحوكمة ورفع الوعي وحماية الأصول الرقمية.",
+        "created_at": "2026-10-21T12:05:21+00:00",
+        "url": "https://sabq.org/article/جامعة-جازان-تُقيم-ورشة-عمل-ودورة-تدريبية-في-الأمن-السيبراني-لمنسوبي-الجهات-الحكومية"
+      },
+      {
+        "key": "rss:a30d20aa57f36ee2",
+        "platform": "rss",
+        "label": "سبق",
+        "author_name": "سبق",
+        "text": "أمير الباحة يدشّن جائزة التميز في العمل الأهلي بدورتها السادسة\n\nدشّن أمير منطقة الباحة الأمير الدكتور حسام بن سعود جائزة التميز في العمل الأهلي في دورتها السادسة، الموجهة للجمعيات الأهلية ومؤسسات القطاع غير الربحي، بهدف نشر ثقافة الجودة والتميز المؤسسي، وتحفيز الجمعيات على تطوير أدائها وتعزيز الحوكمة، مع بدء استقبال المشاركات وإعلان النتائج في 27 ديسمبر 2026.",
+        "created_at": "2026-10-21T11:31:33+00:00",
+        "url": "https://sabq.org/article/أمير-الباحة-يدشّن-جائزة-التميز-في-العمل-الأهلي-بدورتها-السادسة"
+      },
+      {
+        "key": "rss:ba160773872b2c00",
+        "platform": "rss",
+        "label": "سبق",
+        "author_name": "سبق",
+        "text": "من الحفر الملوثة إلى محارق بألف درجة.. تقنيات حديثة لحماية البيئة من مخلفات الحيوانات النافقة\n\nكشف المهندس محمد المعيذر لـ\"سبق\" عن دور المحارق المتخصصة في التخلص الآمن من الحيوانات والدواجن النافقة، بوصفها بديلاً للحفر والدفن الذي يهدد التربة والمياه الجوفية. وأوضح أن المحارق المرخَّصة من المركز الوطني لإدارة النفايات تتنوع سعاتها من 50 كيلوغرامًا حتى طن في الساعة، مع حرارة تصل إلى ألف درجة مئوية.",
+        "created_at": "2026-10-21T10:22:09+00:00",
+        "url": "https://sabq.org/article/من-الحفر-الملوثة-إلى-محارق-بألف-درجة-تقنيات-حديثة-لحماية-البيئة-من-مخلفات-الحيوانات-النافقة"
+      },
       {
         "key": "x:2112844267815080279",
         "platform": "x",
@@ -215,51 +310,6 @@
         "text": "البومة الفرعونية 🦉 \nحارسة الليل، وحلقة التوازن في النظام البيئي. https://t.co/QVOGi8JWT9",
         "created_at": "2026-10-21T08:54:09+00:00",
         "url": "https://x.com/MEWA_KSA/status/2112829784770449854"
-      },
-      {
-        "key": "x:2112823251965465023",
-        "platform": "x",
-        "label": "EasternEamana",
-        "author_name": "أمانة المنطقة الشرقية",
-        "text": "✨ نظافة مستمرة .. ومشهد حضري أجمل ✨ \n\nتعمل #أمانة_المنطقة_الشرقية، ممثلةً بـ #بلدية_النعيرية، على تنفيذ خطة تشغيلية متكاملة لأعمال النظافة العامة ورفع وإزالة المخلفات والأنقاض من مداخل وميادين المحافظة، للارتقاء بمستوى الخدمات، و #تحسين_المشهد_الحضري، وتعزيز #جودة_الحياة. 🌿 🏙️\n\n#وزارة_البلديات_والإسكان \n#أمانة_المنطقة_الشرقية | #الشرقية_أمانة \n#مدن_أجمل | #لأنها_بلدي",
-        "created_at": "2026-10-21T08:28:12+00:00",
-        "url": "https://x.com/EasternEamana/status/2112823251965465023"
-      },
-      {
-        "key": "x:2112820693352018069",
-        "platform": "x",
-        "label": "EasternEamana",
-        "author_name": "أمانة المنطقة الشرقية",
-        "text": "💡 | إنارة أكثر كفاءة\n\nتعمل #أمانة_المنطقة_الشرقية ممثلةً بـ #بلدية_مليجة على صيانة أعمدة الإنارة، لتعزيز كفاءة المرافق العامة والارتقاء بجودة المشهد الحضري.🌿\n\n#وزارة_البلديات_والإسكان \n#الشرقية_أمانة | #لأنها_بلدي https://t.co/fHjDugcANf",
-        "created_at": "2026-10-21T08:18:02+00:00",
-        "url": "https://x.com/EasternEamana/status/2112820693352018069"
-      },
-      {
-        "key": "x:2112819812804018473",
-        "platform": "x",
-        "label": "EasternEamana",
-        "author_name": "أمانة المنطقة الشرقية",
-        "text": "📸 | طرق أكثر جودة وانسيابية\n\nتكتمل ملامح التطوير في شارع الأمير منصور بن متعب بـ #الخفجي، بعد انتهاء أعمال السفلتة والتطوير، ضمن جهود #أمانة_المنطقة_الشرقية ممثلةً بـ #بلدية_الخفجي للارتقاء بشبكة الطرق وتحسين المشهد الحضري.🛣️✨\n\n#وزارة_البلديات_والإسكان\n#الشرقية_أمانة | #أنسنة_المدن |  #السلامة_المرورية",
-        "created_at": "2026-10-21T08:14:32+00:00",
-        "url": "https://x.com/EasternEamana/status/2112819812804018473"
-      },
-      {
-        "key": "li:7518578895793913856",
-        "platform": "li",
-        "label": "awptco",
-        "author_name": "Alkhorayef Water & Power Technologies (AWPT)",
-        "text": "Safety isn’t a milestone. It’s a habit, practiced every hour. \nOur Eastern Sector projects have been recognized by the National Water Company for reaching 30 million safe man-hours, strengthening safety standards and delivering on performance targets. \n\nEvery one of those hours was worked by teams who put people first. \n\n#SafetyFirst #HSE #EasternProvince #AWPT",
-        "created_at": "2026-10-21T07:48:17.198000+00:00",
-        "url": "https://www.linkedin.com/posts/awptco_safetyfirst-hse-easternprovince-activity-7518578895793913856-NsXg"
-      },
-      {
-        "key": "li:7518575772794679296",
-        "platform": "li",
-        "label": "awptco",
-        "author_name": "Alkhorayef Water & Power Technologies (AWPT)",
-        "text": "حين تكون السلامة ثقافة، يصبح الإنجاز سجلًّا.. \nتُوِّجت مشاريعنا في القطاع الشرقي بتكريم شركة المياه الوطنية، تقديرًا لتحقيقها 30 مليون ساعة عمل آمنة، تعزيزًا لمعايير السلامة وتحقيقًا لمستهدفات الأداء. \nملايين الساعات من العمل التشغيلي في المواقع، أنجزتها فرقنا بانضباطٍ يضع سلامة الإنسان أولًا. \n \n#السلامة_أولا #الصحة_والسلامة #القطاع_الشرقي #AWPT",
-        "created_at": "2026-10-21T07:35:52.617000+00:00",
-        "url": "https://www.linkedin.com/posts/awptco_aepaesaebaesaepaetaerabraelaewaesaep-aepaesaedaevaerabraewaepaesaebaesaepaetaer-activity-7518575772794679296-v5Cq"
       }
     ],
     "فرحان العنزي": [
@@ -309,6 +359,15 @@
         "url": "https://x.com/riyadhef1/status/2112812746609737781"
       },
       {
+        "key": "rss:a3381d89227036f7",
+        "platform": "rss",
+        "label": "سبق",
+        "author_name": "سبق",
+        "text": "بداية عصر الذكاء الاصطناعي التوكيلي\n\nيوضح المقال مفهوم الذكاء الاصطناعي التوكيلي بوصفه نقلة من مجرّد توليد المحتوى إلى تنفيذ المهام ذاتيًا وفق أهداف وصلاحيات يحددها المستخدم، مع إمكانية عمل فرق من الوكلاء يتقاسمون جمع المعلومات والتحليل والكتابة والمراجعة. يستعرض التقرير دراسات لـ\"سدايا\" وجهات دولية تُظهر مكاسب ملموسة في الإنتاجية وخفض أعباء العمل، مع توقع وصول عدد الوكلاء النشطين إلى ١.١٥ مليار بحلول ٢٠٢٩، وارتفاع قناعة القيادات التنفيذية بعائدهم الاستثماري. ويختتم المقال بإرشادات عملية للبدء عبر اختيار مهمة روتينية واحدة، وتجهيز الأدوات والصلاحيات، ثم التجربة والقياس قبل التوسّع، مع مقارنة بين أدوات مثل \"جروك بوت\" و\"هيرميز\" و\"أوبن كلاو\" من حيث سهولة البداية والتكلفة والخبرة التقنية.",
+        "created_at": "2026-10-21T07:46:00+00:00",
+        "url": "https://sabq.org/article/وكلاء-الذكاء-الاصطناعي-يَعِدون-بقفزة-إنتاجية-بثلاثة-تريليونات-دولار"
+      },
+      {
         "key": "x:2112801071022105002",
         "platform": "x",
         "label": "wathefah",
@@ -325,30 +384,29 @@
         "text": "Coaching and mentoring are not the same.\nThis is how they are different.\nAnd this is how to become a unique value-added coach.\n\n\n\nGreat post by: Jeroen Kraaijenbrink\n\n\nOriginal post below\n\n\n⬇️⬇️⬇️\n\n\nCoaching and mentoring are not the same.\nThis is how they are different.\nAnd this is how to become a unique value-added coach.\n\nMany people speak about coaching and mentoring as if they are interchangeable. They are not. And understanding the difference is one of the most important things you can do for your own development and for the growth of the people you support.\n\nThis visual captures a truth that often gets lost in practice. Coaching and mentoring sit on the same spectrum, yet they serve different purposes. \n\nCoaching creates space for people to think for themselves. It invites reflection, draws out insight, and helps someone strengthen their own clarity and autonomy. The coach does not tell you what to do. The coach makes it possible for you to discover it.\n\nMentoring works differently. It draws on the lived experience of someone who has walked the path before you. The mentor shares stories, offers guidance, transfers knowledge and culture, and helps you navigate decisions with wisdom earned over time. A great mentor can shorten your learning curve in ways no book or course ever can.\n\nBoth practices share a deep human foundation: empathy, trust, curiosity, listening, and meaning making. These are the qualities that allow any form of guidance to become transformational instead of transactional.\n\nThe question is not which one is better. It is where you need to be on the spectrum at a specific moment. Sometimes you need a coach who helps you step back from the noise and find your own direction. Sometimes you need a mentor who helps you see around corners you have not yet learned to notice. And often, the most impactful relationships blend both, shifting seamlessly as the situation requires.\n\nThis is also why becoming a truly effective coach today requires more than a single skillset. You need the coaching foundations that cultivate autonomy and critical thinking. You also need the ability to draw from your experience responsibly and to know when guidance supports growth and when it risks taking it away.\n\n______________\n\n\nDM us to be featured on our next post\n\nFollow for more Useful Infographics",
         "created_at": "2026-10-21T06:00:42.340000+00:00",
         "url": "https://www.linkedin.com/posts/infographics-insights_coaching-and-mentoring-are-not-the-same-activity-7518551822157176832-1Go6"
-      },
-      {
-        "key": "li:7518538660976463872",
-        "platform": "li",
-        "label": "ministry-of-human-resources-and-social-development-ksa",
-        "author_name": "Ministry of Human Resources and Social Development - KSA",
-        "text": "الوزارة تنشر استطلاع حول أولويات تطبيق خاصية التقييم الفوري واللحظي في منصة مسار.\n\n🔗|| للمزيد: https://lnkd.in/dywsX8CR",
-        "created_at": "2026-10-21T05:08:24.470000+00:00",
-        "url": "https://www.linkedin.com/posts/ministry-of-human-resources-and-social-development-ksa_%D8%A7%D9%84%D9%88%D8%B2%D8%A7%D8%B1%D8%A9-%D8%AA%D9%86%D8%B4%D8%B1-%D8%A7%D8%B3%D8%AA%D8%B7%D9%84%D8%A7%D8%B9-%D8%AD%D9%88%D9%84-%D8%A3%D9%88%D9%84%D9%88%D9%8A%D8%A7%D8%AA-%D8%AA%D8%B7%D8%A8%D9%8A%D9%82-%D8%AE%D8%A7%D8%B5%D9%8A%D8%A9-activity-7518538660976463872-edUH"
       }
     ]
   },
-  "last_fetch": "2026-10-21T11:55:17.930956+00:00",
-  "next_fetch": "2026-10-21T12:45:15.544277+00:00",
+  "last_fetch": "2026-10-21T13:21:31.037926+00:00",
+  "next_fetch": "2026-10-21T13:31:31.037926+00:00",
   "baselined": [
     "أحمد المنصور|x",
     "فرحان العنزي|x",
     "أحمد المنصور|li",
-    "فرحان العنزي|li"
+    "فرحان العنزي|li",
+    "أحمد المنصور|rss|سبق",
+    "فرحان العنزي|rss|سبق"
   ],
   "last_ok": {
     "أحمد المنصور|li": "2026-10-21T10:45:15.544277+00:00",
     "فرحان العنزي|li": "2026-10-21T10:45:15.544277+00:00",
-    "all|x": "2026-10-21T10:45:15.544277+00:00"
+    "all|x": "2026-10-21T10:45:15.544277+00:00",
+    "rss|سبق": "2026-10-21T13:21:31.037926+00:00"
   },
-  "fail_streaks": {}
+  "fail_streaks": {
+    "all|x": 1
+  },
+  "retry_at": {
+    "all|x": "2026-10-21T13:41:31.037926+00:00"
+  }
 }
