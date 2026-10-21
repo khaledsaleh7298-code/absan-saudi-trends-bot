@@ -142,6 +142,67 @@ def li_slug(url):
     return parts[1] if len(parts) >= 2 and parts[0] in ("company", "showcase", "school") else ""
 
 
+# ----------------------------- الفلتر -----------------------------
+# طبقتين: 1) كلمات مجال العميل: الخبر لازم يكون فيه وحدة منها (إلا من حساب موثوق)
+#          2) كلمات ممنوعة: أي خبر فيه وحدة منها ما بينبعت أبداً
+AR_MARKS = re.compile(r"[ؐ-ًؚ-ٰٟۖ-ۭـ]")
+
+
+def normalize(text):
+    """يوحّد شكل النص العربي حتى تنلقط الكلمة بكل أشكالها:
+    بيشيل التشكيل، وبيوحّد أ/إ/آ → ا، و ة → ه، و ى → ي، والهاشتاق بيصير كلام عادي"""
+    text = AR_MARKS.sub("", text or "")
+    text = re.sub("[إأآٱ]", "ا", text).replace("ة", "ه").replace("ى", "ي")
+    return re.sub(r"[#_]", " ", text).lower()
+
+
+def word_pattern(word):
+    """يحوّل كلمة لنمط بحث بيلقطها بأشكالها:
+    «مياه» بتلقط: مياه، المياه، والمياه، بالمياه، للمياه
+    «الري» بتلقط: الري، للري... بس مش «الرياض» (لازم الكلمة كاملة)
+    الكلمات الإنجليزية: كلمة كاملة بس، فـ AI ما بتلقط Dubai"""
+    w = normalize(word).strip()
+    if not w:
+        return None
+    if re.fullmatch(r"[a-z0-9 .&+-]+", w):
+        body = r"\s+".join(map(re.escape, w.split()))
+        return re.compile(rf"(?<![a-z0-9]){body}(?![a-z0-9])")
+    parts = w.split()
+    if parts[0].startswith("ال") and len(parts[0]) > 3:
+        parts[0] = parts[0][2:]
+        prefix = r"[وف]?(?:[بك]?ال|لل)"          # الكلمة لازم تكون معرّفة
+    else:
+        prefix = r"[وف]?(?:[بك]?ال|لل|ل)?"       # معرّفة أو لأ
+    body = r"\s+".join(map(re.escape, parts))
+    return re.compile(rf"(?<!\w){prefix}{body}(?!\w)")
+
+
+def compile_words(words):
+    return [p for p in (word_pattern(str(w)) for w in words or []) if p]
+
+
+def source_id(value):
+    """يحوّل الحساب الموثوق لشكل واحد: @MEWA_KSA → mewa_ksa، ورابط لينكدإن → اسم الصفحة"""
+    value = str(value).strip()
+    if value.startswith("http") and "linkedin.com" in value:
+        return li_slug(value).lower()
+    if value.startswith("http"):
+        value = urllib.parse.urlparse(value).path.strip("/").split("/")[0]
+    return value.lstrip("@").lower()
+
+
+def passes_filter(item, client):
+    """يرجع (بيمرّ؟، السبب)"""
+    text = normalize(item["text"])
+    if any(p.search(text) for p in client["blocked"]):
+        return False, "كلمة ممنوعة"
+    if (item["label"] or "").lower() in client["trusted"]:
+        return True, ""
+    if client["keywords"] and not any(p.search(text) for p in client["keywords"]):
+        return False, "برا مجال العميل"
+    return True, ""
+
+
 def load_sources():
     """يقرأ sources.json ويتأكد إنه سليم. أي غلط بيطلع برسالة واضحة بسجل التشغيل"""
     try:
@@ -151,6 +212,7 @@ def load_sources():
     if not data or not isinstance(data.get("clients"), list):
         sys.exit(f"ملف {SOURCES_FILE} مش موجود أو ما فيه قائمة clients.")
 
+    blocked = compile_words(data.get("blocked_words"))
     clients = []
     for c in data["clients"]:
         name = str(c.get("name") or "").strip()
@@ -174,7 +236,10 @@ def load_sources():
                 print(f"تجاهلت صفحة لينكدإن غير صالحة عند {name}: {u!r}")
         if name and (handles or pages):
             clients.append({"name": name, "emoji": c.get("emoji") or "📰",
-                            "handles": handles, "pages": pages})
+                            "handles": handles, "pages": pages,
+                            "keywords": compile_words(c.get("keywords")),
+                            "trusted": {source_id(s) for s in c.get("trusted_accounts") or []},
+                            "blocked": blocked})
     if not clients:
         sys.exit(f"ملف {SOURCES_FILE} ما فيه ولا عميل عنده مصادر صالحة.")
     return clients
@@ -261,7 +326,8 @@ def format_latest(state, clients):
         # نعرض بس أخبار الحسابات الموجودة حالياً بالقائمة (اللي انشالت ما بتطلع)
         allowed = {h.lower() for h in c["handles"]}
         items = [t for t in recent.get(c["name"], [])
-                 if t["platform"] != "x" or t["label"].lower() in allowed][:LATEST_PER_CLIENT]
+                 if (t["platform"] != "x" or t["label"].lower() in allowed)
+                 and passes_filter(t, c)[0]][:LATEST_PER_CLIENT]
         lines = [f"\n{c['emoji']} <b>{html.escape(c['name'])}</b>"]
         if not items:
             lines.append("ما في أخبار جديدة لسا.")
@@ -276,7 +342,8 @@ def format_latest(state, clients):
 def format_sources(clients):
     lines = ["📡 <b>المصادر اللي البوت بيراقبها</b>",
              f"يفحص X كل {every_text(X_FETCH_EVERY_MINUTES)}، "
-             f"ولينكدإن كل {every_text(LI_FETCH_EVERY_MINUTES)} تقريباً."]
+             f"ولينكدإن كل {every_text(LI_FETCH_EVERY_MINUTES)} تقريباً.",
+             "🔎 وبيبعت بس الأخبار اللي بتخص مجال كل عميل."]
     for c in clients:
         lines.append(f"\n{c['emoji']} <b>{html.escape(c['name'])}</b>")
         if c["handles"]:
@@ -555,15 +622,23 @@ def main():
                          and parse_time(t["created_at"]) >= oldest_allowed]
                 bkey = f"{c['name']}|{platform}"
                 first_time = bkey not in state["baselined"]
-                print(f"{c['name']} / {PLATFORMS[platform]}: {len(mine)} items, {len(fresh)} new"
-                      + (" (first check: saved silently)" if first_time else "") + ".")
+                passed = []
                 for t in fresh:
                     new_keys.add(t["key"])
+                    ok, why = passes_filter(t, c)
+                    if not ok:
+                        print(f"  filtered ({why}): {short_label(t)}: "
+                              f"{shorten(t['text'].replace(chr(10), ' '), 60)}")
+                        continue
+                    passed.append(t)
                     if not first_time:
                         alerts.append((t, c))
+                print(f"{c['name']} / {PLATFORMS[platform]}: {len(mine)} items, {len(fresh)} new, "
+                      f"{len(fresh) - len(passed)} filtered"
+                      + (" (first check: saved silently)" if first_time else "") + ".")
                 if first_time:
                     state["baselined"].append(bkey)
-                keep = {t["key"]: t for t in fresh + recent.get(c["name"], [])}
+                keep = {t["key"]: t for t in passed + recent.get(c["name"], [])}
                 recent[c["name"]] = sorted(keep.values(), key=lambda t: t["created_at"],
                                            reverse=True)[:LATEST_PER_CLIENT]
             for k in new_keys:
